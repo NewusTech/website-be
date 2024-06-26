@@ -11,11 +11,10 @@ const mid = require("../middlewares/auth.middleware");
 
 const route = require("express").Router();
 
-route.get("/admin/portfolio/lists", portfolioLists);
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+route.get("/admin/portfolio/lists", portfolioLists);
 route.post("/admin/portfolio/new", [mid.isLogin, mid.isLogout], upload.single("image"), newPortfolio);
 route.get("/admin/:slug/portfolio/detail", portfolioDetail);
 route.delete("/admin/:id/portfolio/deleted", deletePortfolio);

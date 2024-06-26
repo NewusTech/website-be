@@ -14,8 +14,8 @@ const multer = require('multer');
 const upload = multer();
 
 route.post('/admin/tagblog/create', [mid.isLogin, mid.isLogout], tagblogController.createtagblog);
-route.get('/admin/tagblog/get', [mid.isLogin, mid.isLogout], tagblogController.gettagblog);
-route.get('/admin/tagblog/get/:id', [mid.isLogin, mid.isLogout], tagblogController.gettagblogById);
+route.get('/admin/tagblog/get', tagblogController.gettagblog);
+route.get('/admin/tagblog/get/:id', tagblogController.gettagblogById);
 route.put('/admin/tagblog/update/:id', [mid.isLogin, mid.isLogout], tagblogController.updatetagblog);
 route.delete('/admin/tagblog/delete/:id', [mid.isLogin, mid.isLogout], tagblogController.deletetagblog);
 
