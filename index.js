@@ -3,12 +3,18 @@
 //import config
 const baseConfig =  require('./config/base.config');
 
+//import cors
+const cors = require('cors');
+
 //import express
 const express = require('express')
 const error = require('./errorHandler/errorHandler')
 const app = express();
 const port = 3000;
 const urlApi = "/api";
+
+// Mengaktifkan CORS untuk semua permintaan
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
