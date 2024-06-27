@@ -9,9 +9,9 @@ const {
 const router = require("express").Router();
 const mid = require('../middlewares/auth.middleware');
 
-router.get("/admin/socialmedia/get", [mid.isLogin, mid.isLogout], socialMediaLists);
+router.get("/admin/socialmedia/get", socialMediaLists);
 router.post("/admin/socialmedia/create", [mid.isLogin, mid.isLogout], newSocialMedia);
-router.get("/admin/:id/socialmedia/detail", [mid.isLogin, mid.isLogout], socialMediaDetail);
+router.get("/admin/:id/socialmedia/detail", socialMediaDetail);
 router.delete("/admin/:id/socialmedia/delete", [mid.isLogin, mid.isLogout], deleteSocialMedia);
 router.put("/admin/:id/socialmedia/update", [mid.isLogin, mid.isLogout], updateSocialMedia);
 
