@@ -101,35 +101,33 @@ class PortfolioController {
   // method for portfolio detail
   static async portfolioDetail(req, res, next) {
     try {
-      // getting params from slug
-      const { slug } = req.params;
+        // getting params from slug
+        const { slug } = req.params;
 
-      // method to check portfolio detail
-      const portfolio = await Portfolio.findOne(
-        { slug },
-        {
-          include: [
-            {
-              model: Kategoriportofolio,
-              attributes: ["title", "createdAt"],
-            },
-            {
-              model: Tagportofolio,
-              attributes: ["title", "createdAt"],
-            },
-          ],
-        }
-      );
+        // method to check portfolio detail
+        const portfolio = await Portfolio.findOne({
+            where: { slug: slug }, // Using slug directly from params
+            include: [
+                {
+                    model: Kategoriportofolio,
+                    attributes: ["title", "createdAt"],
+                },
+                {
+                    model: Tagportofolio,
+                    attributes: ["title", "createdAt"],
+                },
+            ],
+        });
 
-      // method to check if portfolio doesn't exist
-      if (!portfolio) throw { name: "InvalidSlug" };
+        // method to check if portfolio doesn't exist
+        if (!portfolio) throw { name: "InvalidSlug" };
 
-      res.status(200).json({ portfolio });
+        res.status(200).json({ portfolio });
     } catch (error) {
-      console.log(error);
-      next(error);
+        console.log(error);
+        next(error);
     }
-  }
+}
 
   // method for creating new portfolio
   static async newPortfolio(req, res, next) {
