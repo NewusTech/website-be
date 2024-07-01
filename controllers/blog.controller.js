@@ -211,6 +211,71 @@ module.exports = {
         }
     },
 
+    getBlogBySlug: async (req, res) => {
+        try {
+            // mendapatkan semua data blog berdasarkan slug
+            let blogs = await Blog.findAll({
+                where: {
+                    slug: req.params.slug
+                },
+                include: [
+                    {
+                        model: Kategoriblog,
+                        attributes: ['title', 'id'],
+                        as: 'Kategoriblog'
+                    },
+                    {
+                        model: Tagblog,
+                        attributes: ['title', 'id'],
+                        as: 'Tagblog'
+                    },
+                    {
+                        model: User,
+                        attributes: ['name', 'id'],
+                        as: 'User'
+                    }
+                ],
+                attributes: { exclude: ['kategoriblog_id', 'tagblog_id', 'user_id'] }
+            });
+    
+            // cek jika blog tidak ada
+            if (blogs.length === 0) {
+                res.status(404).json(response(404, 'blogs not found'));
+                return;
+            }
+    
+            // format setiap blog yang ditemukan
+            let formattedBlogs = blogs.map(blog => ({
+                id: blog.id,
+                title: blog.title,
+                slug: blog.slug,
+                keyword: blog.keyword,
+                excerpt: blog.excerpt,
+                body: blog.body,
+                kategoriblog_id: blog.Kategoriblog?.id,
+                kategoriblog_title: blog.Kategoriblog?.title,
+                tagblog_id: blog.Tagblog?.id,
+                tagblog_title: blog.Tagblog?.title,
+                user_id: blog.User?.id,
+                user_title: blog.User?.name,
+                image: blog.image,
+                status: blog.status,
+                status_desc: blog.status === false ? "Draft" : "Published",
+                publishAt: blog.publishAt,
+                createdAt: blog.createdAt,
+                updatedAt: blog.updatedAt
+            }));
+    
+            // response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get blogs by slug', formattedBlogs));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+    
+    
+
     //mengupdate blog berdasarkan id
     updateblog: async (req, res) => {
         try {
