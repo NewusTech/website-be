@@ -1,12 +1,16 @@
 const { Service } = require("../models/index");
 
-const cloudinary = require("cloudinary").v2;
+const { response } = require('../helpers/response.formatter');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
 });
+
 
 class ServiceController {
   static async serviceLists(req, res, next) {
@@ -45,35 +49,43 @@ class ServiceController {
     try {
       const { title, description } = req.body;
 
-      // configuration for uploading file image uses cloudinary
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "services",
-        // for naming file upload
-        public_id: originalname,
-      });
+      let imageKey;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      const service = await Service.create({
-        title,
-        description,
-        image: image,
-      });
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/service/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
 
-      res.status(201).json({
-        message: "success create service",
-        data: service,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const dataCreate = {
+        title: title,
+        description: description,
+        image: req.file ? imageKey : undefined
+      }
+
+      const createServices = await Service.create(dataCreate);
+
+      res.status(201).json(response(201, 'success create service', createServices));
+    } catch (err) {
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
     }
   }
+
+ 
 
   static async deleteService(req, res, next) {
     try {
