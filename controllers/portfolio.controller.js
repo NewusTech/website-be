@@ -1,17 +1,19 @@
 const { Op } = require("sequelize");
+const { response } = require("../helpers/response.formatter");
 const {
   Kategoriportofolio,
   Tagportofolio,
   Portfolio,
 } = require("../models/index");
 const { default: slugify } = require("slugify");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-const cloudinary = require("cloudinary").v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 class PortfolioController {
@@ -101,38 +103,36 @@ class PortfolioController {
   // method for portfolio detail
   static async portfolioDetail(req, res, next) {
     try {
-        // getting params from slug
-        const { slug } = req.params;
+      // getting params from slug
+      const { slug } = req.params;
 
-        // method to check portfolio detail
-        const portfolio = await Portfolio.findOne({
-            where: { slug: slug }, // Using slug directly from params
-            include: [
-                {
-                    model: Kategoriportofolio,
-                    attributes: ["title", "createdAt"],
-                },
-                {
-                    model: Tagportofolio,
-                    attributes: ["title", "createdAt"],
-                },
-            ],
-        });
+      // method to check portfolio detail
+      const portfolio = await Portfolio.findOne({
+        where: { slug: slug }, // Using slug directly from params
+        include: [
+          {
+            model: Kategoriportofolio,
+            attributes: ["title", "createdAt"],
+          },
+          {
+            model: Tagportofolio,
+            attributes: ["title", "createdAt"],
+          },
+        ],
+      });
 
-        // method to check if portfolio doesn't exist
-        if (!portfolio) throw { name: "InvalidSlug" };
+      // method to check if portfolio doesn't exist
+      if (!portfolio) throw { name: "InvalidSlug" };
 
-        res.status(200).json({ portfolio });
+      res.status(200).json({ portfolio });
     } catch (error) {
-        console.log(error);
-        next(error);
+      console.log(error);
+      next(error);
     }
-}
+  }
 
-  // method for creating new portfolio
   static async newPortfolio(req, res, next) {
     try {
-      // req body for get value
       const {
         title,
         keyword,
@@ -144,48 +144,52 @@ class PortfolioController {
         appsLink,
       } = req.body;
 
-      // changing ref Id from String to Integer
-      const portfolioTagIdInt = parseInt(TagportofolioId, 10);
-      const portfolioCategoryIdInt = parseInt(KategoriportofolioId, 10);
+      let imageKey;
 
-      // configuration for uploading file image uses cloudinary
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "portfolio",
-        // for naming file upload
-        public_id: originalname,
-      });
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/portofolio/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        };
 
-      // method to create new portfolio
-      const portfolio = await Portfolio.create({
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const dataCreate = {
         title,
         slug: slugify(title, { lower: true }),
         keyword,
         excerpt,
         body,
-        TagportofolioId: portfolioTagIdInt,
-        KategoriportofolioId: portfolioCategoryIdInt,
-        image: image,
+        TagportofolioId,
+        KategoriportofolioId,
         webLink,
         appsLink,
         portfolioYear: String(new Date()),
-      });
+        image: req.file ? imageKey : undefined,
+      };
 
-      res.status(201).json({
-        message: "Success add new portfolio",
-        data: portfolio,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+      const newPortfolio = await Portfolio.create(dataCreate);
+
+      res
+        .status(201)
+        .json(response(201, "success create new portofolio", newPortfolio));
+    } catch (err) {
+      res.status(500).json(response(500, "internal server error", err));
+      console.log(err);
     }
   }
+
   // method for deleting portfolio
   static async deletePortfolio(req, res, next) {
     try {
@@ -210,13 +214,9 @@ class PortfolioController {
     }
   }
 
-  // method for updating portfolio
   static async updatePortfolio(req, res, next) {
     try {
-      // getting params to check portfolio from db
       const { id } = req.params;
-
-      // req body for get value
       const {
         title,
         keyword,
@@ -228,52 +228,67 @@ class PortfolioController {
         appsLink,
       } = req.body;
 
-      // method to check if portfolio exist
       const portfolio = await Portfolio.findByPk(id);
 
-      // validate if portfolio doesn't exist
       if (!portfolio) throw { name: "InvalidId" };
 
-      // changing ref Id from String to Integer
-      const portfolioTagIdInt = parseInt(TagportofolioId, 10);
-      const portfolioCategoryIdInt = parseInt(KategoriportofolioId, 10);
+      // Ensure title is a string
+      if (typeof title !== 'string') {
+        throw { name: "InvalidTitle", message: "Title must be a string" };
+      }
 
-      // configuration for uploading file image uses cloudinary
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "portfolio",
-        // for naming file upload
-        public_id: originalname,
-      });
+      let imageKey;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      // method to update portfolio
-      await portfolio.update({
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/portofolio/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const dataUpdate = {
         title,
         slug: slugify(title, { lower: true }),
         keyword,
         excerpt,
         body,
-        TagportofolioId: portfolioTagIdInt,
-        KategoriportofolioId: portfolioCategoryIdInt,
-        image: image,
+        TagportofolioId,
+        KategoriportofolioId,
         webLink,
         appsLink,
-        portfolioYear: String(new Date()),
+        portfolioYear: new Date().getFullYear(), // Change to get only the year
+        image: req.file ? imageKey : portfolio.image, // update image only if new file is uploaded
+      };
+
+      // Add where clause to specify which portfolio to update
+      await Portfolio.update(dataUpdate, {
+        where: { id },
       });
+
+      const updatedPortfolio = await Portfolio.findByPk(id); // Fetch the updated portfolio data
 
       res.status(200).json({
         message: "Successfully updated portfolio",
-        data: portfolio,
+        data: updatedPortfolio,
       });
-    } catch (error) {
-      console.log(error);
-      next(error);
+    } catch (err) {
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message || err,
+      });
+      console.log(err);
     }
   }
 }

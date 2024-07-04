@@ -1,12 +1,15 @@
 const { CLient } = require("../models/index");
+const { response } = require('../helpers/response.formatter');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-const cloudinary = require("cloudinary").v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
 });
+
 
 class ClientController {
   static async clientLists(req, res, next) {
@@ -45,31 +48,38 @@ class ClientController {
     try {
       const { title } = req.body;
 
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "client",
-        // for naming file upload
-        public_id: originalname,
-      });
+      let imageKey;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      const client = await CLient.create({
-        title,
-        image: image,
-      });
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/client/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
 
-      res.status(201).json({
-        message: "success create client",
-        data: client,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const dataCreate = {
+        title: title,
+        image: req.file ? imageKey : undefined
+      }
+
+      const createClient = await CLient.create(dataCreate);
+
+      res.status(201).json(response(201, 'success create instansi', createClient));
+    } catch (err) {
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
     }
   }
 
@@ -92,43 +102,57 @@ class ClientController {
       next(error);
     }
   }
+  
 
-  static async updateClient(req, res, next) {
-    try {
-      const { id } = req.params;
-      const { title } = req.body;
+ static async updateClient(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
 
-      const client = await CLient.findByPk(id);
+    const client = await CLient.findByPk(id);
 
-      if (!client) throw { name: "InvalidId" };
+    if (!client) throw { name: "InvalidId" };
 
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "client",
-        // for naming file upload
-        public_id: originalname,
-      });
+    let imageKey;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+    if (req.file) {
+      const timestamp = new Date().getTime();
+      const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      await client.update({
-        title,
-        image: image,
-      });
+      const uploadParams = {
+        Bucket: process.env.AWS_BUCKET,
+        Key: `webnewus/client/${uniqueFileName}`,
+        Body: req.file.buffer,
+        ACL: 'public-read',
+        ContentType: req.file.mimetype
+      };
 
-      res.status(200).json({
-        message: "success update client",
-        data: client,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+      const command = new PutObjectCommand(uploadParams);
+
+      await s3Client.send(command);
+
+      imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
     }
+
+    const dataUpdate = {
+      title: title,
+      image: req.file ? imageKey : client.image // update image only if new file is uploaded
+    };
+
+    // Add where clause to specify which client to update
+    await CLient.update(dataUpdate, {
+      where: { id: id }
+    });
+
+    const updatedClient = await CLient.findByPk(id); // Fetch the updated client data
+
+    res.status(200).json(response(200, 'success update instansi', updatedClient));
+  } catch (err) {
+    res.status(500).json(response(500, 'internal server error', err));
+    console.log(err);
   }
+}
+
 }
 
 module.exports = ClientController;
