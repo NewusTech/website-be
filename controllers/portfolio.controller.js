@@ -143,28 +143,50 @@ class PortfolioController {
         webLink,
         appsLink,
       } = req.body;
-
+  
       let imageKey;
-
-      if (req.file) {
+      let logoKey;
+  
+      // Handle image upload
+      if (req.files && req.files.image) {
         const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
-
+        const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+  
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/portofolio/${uniqueFileName}`,
-          Body: req.file.buffer,
-          ACL: "public-read",
-          ContentType: req.file.mimetype,
+          Body: req.files.image[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.image[0].mimetype
         };
-
+  
         const command = new PutObjectCommand(uploadParams);
-
+  
         await s3Client.send(command);
-
+  
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-
+  
+      // Handle logo upload
+      if (req.files && req.files.logo) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/portofolio/${uniqueFileName}`,
+          Body: req.files.logo[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.logo[0].mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+  
       const dataCreate = {
         title,
         slug: slugify(title, { lower: true }),
@@ -176,16 +198,17 @@ class PortfolioController {
         webLink,
         appsLink,
         portfolioYear: String(new Date()),
-        image: req.file ? imageKey : undefined,
+        image: req.files && req.files.image ? imageKey : undefined,
+        logo: req.files && req.files.logo ? logoKey : undefined
       };
-
+  
       const newPortfolio = await Portfolio.create(dataCreate);
-
+  
       res
         .status(201)
-        .json(response(201, "success create new portofolio", newPortfolio));
+        .json(response(201, 'success create new portfolio', newPortfolio));
     } catch (err) {
-      res.status(500).json(response(500, "internal server error", err));
+      res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
     }
   }

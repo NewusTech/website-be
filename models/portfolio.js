@@ -88,6 +88,18 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      logo: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Logo is required",
+          },
+          notEmpty: {
+            msg: "Logo is required",
+          },
+        },
+      },
       portfolioYear: {
         type: DataTypes.STRING,
         allowNull: false,
