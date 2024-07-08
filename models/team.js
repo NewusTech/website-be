@@ -74,6 +74,18 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      achievement: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: "Achievement can not be empty",
+          },
+          notNull: {
+            msg: "Achievement can not be empty",
+          },
+        },
+      },
     },
     {
       sequelize,

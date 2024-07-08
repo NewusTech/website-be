@@ -1,11 +1,14 @@
 const { Team, DivitionCategory } = require("../models/index");
 
-const cloudinary = require("cloudinary").v2;
+const { response } = require('../helpers/response.formatter');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
 });
 
 class TeamController {
@@ -54,41 +57,74 @@ class TeamController {
       next(error);
     }
   }
-
   static async newTeam(req, res, next) {
     try {
       const { name, title, description, DivitionCategoryId } = req.body;
-
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
-
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "team",
-        public_id: originalname,
-      });
-
-      const image = result.secure_url;
-
-      const newTeam = await Team.create({
-        name,
-        title,
-        description,
-        image,
+  
+      let imageKey;
+      let achievementKey;
+  
+      // Handle image upload
+      if (req.files && req.files.image) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/team/${uniqueFileName}`,
+          Body: req.files.image[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.image[0].mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+  
+      // Handle achievement upload
+      if (req.files && req.files.achievement) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/team/achievements/${uniqueFileName}`,
+          Body: req.files.achievement[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.achievement[0].mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+  
+      const dataCreate = {
+        name: name,
+        title: title,
+        description: description,
         DivitionCategoryId: divitionCategoryIdInt,
-      });
-
-      res.status(201).json({
-        message: "Success create team",
-        data: newTeam,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
+        achievement: req.files && req.files.achievement ? achievementKey : undefined
+      }
+  
+      const createTeams = await Team.create(dataCreate);
+  
+      res.status(201).json(response(201, 'success create team', createTeams));
+    } catch (err) {
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
     }
   }
+  
+  
+  
 
   static async deleteTeam(req, res, next) {
     try {
