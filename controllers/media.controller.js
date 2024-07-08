@@ -1,11 +1,14 @@
 const { Media } = require("../models/index");
 
-const cloudinary = require("cloudinary").v2;
+const { response } = require('../helpers/response.formatter');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
 });
 
 class MediaController {
@@ -43,35 +46,44 @@ class MediaController {
     }
   }
 
+
   static async newMedia(req, res, next) {
     try {
       const { title, description } = req.body;
 
+      let imageKey;
 
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "media",
-        public_id: originalname,
-      });
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/media/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
 
-      const image = result.secure_url;
+        const command = new PutObjectCommand(uploadParams);
 
-      const newMedia = await Media.create({
-        title,
-        description,
-        image,
-      });
+        await s3Client.send(command);
 
-      res.status(201).json({
-        message: "Success create team",
-        data: newMedia,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const dataCreate = {
+        title: title,
+        description: description,
+        image: req.file ? imageKey : undefined
+      }
+
+      const createMedias = await Media.create(dataCreate);
+
+      res.status(201).json(response(201, 'success create service', createMedias));
+    } catch (err) {
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
     }
   }
 
