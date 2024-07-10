@@ -1,4 +1,14 @@
 const { RecruitmentJob, JobCategory } = require("../models/index");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { response } = require('../helpers/response.formatter');
+
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
+});
 
 class JobRecruitmentController {
   // method for getting job recruitment lists
@@ -110,27 +120,43 @@ class JobRecruitmentController {
   // method for creating job recruitment
   static async newJobRecruitment(req, res, next) {
     try {
-      // for getting value of req body
-      const { title, description, salary, status, coverLetter, JobCategoryId } =
-        req.body;
-
-      // method for creating new job recruitment
-      const jobRecruitment = await RecruitmentJob.create({
+      const { title, description, salary, status, JobCategoryId } = req.body;
+  
+      let fileKey;
+  
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/jobrecruitment/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        fileKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+  
+      const dataCreate = {
         title,
         description,
         salary,
         status,
-        coverLetter,
         JobCategoryId,
-      });
-
-      res.status(201).json({
-        message: "Success creating new job recruitment",
-        data: jobRecruitment,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        coverLetter: req.file ? fileKey : undefined
+      }
+      const createJob = await RecruitmentJob.create(dataCreate);
+  
+      res.status(201).json(response(201, 'success create job recruitment', createJob));
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(response(500, 'internal job recruitment error', err));
     }
   }
 
