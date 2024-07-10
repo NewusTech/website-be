@@ -1,4 +1,14 @@
 const { InternRecruitment } = require("../models/index");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { response } = require('../helpers/response.formatter');
+
+const s3Client = new S3Client({
+  region: process.env.AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
+});
 
 class InterRecruitmentController {
   static async internRecruitmentLists(req, res, next) {
@@ -35,20 +45,39 @@ class InterRecruitmentController {
 
   static async createInternRecruitment(req, res, next) {
     try {
-      const { description, coverLetter } = req.body;
-
-      const intern = await InternRecruitment.create({
+      const { description } = req.body;
+  
+      let fileKey;
+  
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/internrecruitment/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        fileKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+  
+      const dataCreate = {
         description,
-        coverLetter,
-      });
-
-      res.status(201).json({
-        message: "success create internRecruitment",
-        data: intern,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
+        coverLetter: req.file ? fileKey : undefined
+      }
+      const createIntern = await InternRecruitment.create(dataCreate);
+  
+      res.status(201).json(response(201, 'success create intern recruitment', createIntern));
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(response(500, 'internal intern recruitment error', err));
     }
   }
 
