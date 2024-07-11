@@ -47,7 +47,7 @@ class TestimonyController {
 
   static async newTestimony(req, res, next) {
     try {
-      const { name, companyName, testimony } = req.body;
+      const { name, companyName, testimony, rating } = req.body;
 
       let imageKey;
 
@@ -74,6 +74,7 @@ class TestimonyController {
         name: name,
         companyName: companyName,
         testimony:testimony,
+        rating: rating,
         image: req.file ? imageKey : undefined
       }
 
@@ -108,7 +109,7 @@ class TestimonyController {
   static async updateTestimony(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, companyName,testimony } = req.body;
+      const { name, companyName,testimony, rating } = req.body;
   
       const testi = await Testimony.findByPk(id);
   
@@ -138,7 +139,8 @@ class TestimonyController {
       const dataUpdate = {
         name: name,
         companyName: companyName,
-        testimony:testimony,
+        testimony: testimony,
+        rating: rating,
         image: req.file ? imageKey : testimony.image // update image only if new file is uploaded
       };
   
