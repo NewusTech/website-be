@@ -12,7 +12,7 @@ const jobCategory = require('./jobCategory.route');
 const recruitmentJob = require('./recruitmentJob.route');
 
 const team = require('./team.route');
-const divitionCategory = require('./divitionCategory.route');
+const divitionCategory = require('./whyUs.route');
 
 const historyCompany = require('./historyCompany.route');
 const aboutCompany = require('./aboutCompany.route');
@@ -29,6 +29,7 @@ const media = require('./media.route');
 const testimony = require('./testimony.route');
 
 const skill = require('./skill.route');
+const whyUs = require('./whyUs.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -61,4 +62,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, testimony);
 
     app.use(urlApi, skill);
+    app.use(urlApi, whyUs);
 }
