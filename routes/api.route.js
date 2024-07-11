@@ -28,6 +28,8 @@ const service = require('./service.route');
 const media = require('./media.route');
 const testimony = require('./testimony.route');
 
+const skill = require('./skill.route');
+
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
 
@@ -57,4 +59,6 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, service);
     app.use(urlApi, media);
     app.use(urlApi, testimony);
+
+    app.use(urlApi, skill);
 }

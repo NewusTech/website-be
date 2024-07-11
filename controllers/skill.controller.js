@@ -1,4 +1,4 @@
-const { Media } = require("../models/index");
+const { Skill } = require("../models/index");
 
 const { response } = require('../helpers/response.formatter');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -11,15 +11,15 @@ const s3Client = new S3Client({
   }
 });
 
-class MediaController {
-  static async mediaLists(req, res, next) {
+class SkillController {
+  static async skillLists(req, res, next) {
     try {
-      const medias = await Media.findAll({
+      const skill = await Skill.findAll({
       });
 
       res.status(200).json({
-        message: "Success get medias",
-        data: medias,
+        message: "Success get skill",
+        data: skill,
       });
     } catch (error) {
       console.log(error);
@@ -27,18 +27,18 @@ class MediaController {
     }
   }
 
-  static async mediaDetails(req, res, next) {
+  static async skillDetails(req, res, next) {
     try {
       const { id } = req.params;
 
-      const media = await Media.findByPk(id, {
+      const skill = await Skill.findByPk(id, {
       });
 
-      if (!media) throw { name: "InvalidId" };
+      if (!skill) throw { name: "InvalidId" };
 
       res.status(200).json({
-        message: "Success get media detail",
-        data: media,
+        message: "Success get skill detail",
+        data: skill,
       });
     } catch (error) {
       console.log(error);
@@ -47,9 +47,9 @@ class MediaController {
   }
 
 
-  static async newMedia(req, res, next) {
+  static async newSkill(req, res, next) {
     try {
-      const { title, description } = req.body;
+      const { title } = req.body;
 
       let imageKey;
 
@@ -59,7 +59,7 @@ class MediaController {
 
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/media/${uniqueFileName}`,
+          Key: `webnewus/skill/${uniqueFileName}`,
           Body: req.file.buffer,
           ACL: 'public-read',
           ContentType: req.file.mimetype
@@ -74,31 +74,30 @@ class MediaController {
 
       const dataCreate = {
         title: title,
-        description: description,
         image: req.file ? imageKey : undefined
       }
 
-      const createMedias = await Media.create(dataCreate);
+      const createSkill = await Skill.create(dataCreate);
 
-      res.status(201).json(response(201, 'success create media', createMedias));
+      res.status(201).json(response(201, 'success create skill', createSkill));
     } catch (err) {
       res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
     }
   }
 
-  static async deleteMedia(req, res, next) {
+  static async deleteSkill(req, res, next) {
     try {
       const { id } = req.params;
 
-      const media = await Media.findByPk(id);
+      const skill = await Skill.findByPk(id);
 
-      if (!media) throw { name: "InvalidId" };
+      if (!skill) throw { name: "InvalidId" };
 
-      await media.destroy();
+      await skill.destroy();
 
       res.status(200).json({
-        message: "Success delete media",
+        message: "Success delete skill",
       });
     } catch (error) {
       console.log(error);
@@ -106,35 +105,34 @@ class MediaController {
     }
   }
 
-  static async updateMedia(req, res, next) {
+  static async updateSkill(req, res, next) {
     try {
       const { id } = req.params;
-      const {title, description } = req.body;
+      const {title } = req.body;
 
       const { mimetype, buffer, originalname } = req.file;
       const base64 = Buffer.from(buffer).toString("base64");
       const dataURI = `data:${mimetype};base64,${base64}`;
 
       const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "media",
+        folder: "skill",
         public_id: originalname,
       });
 
       const image = result.secure_url;
 
-      const media = await Media.findByPk(id);
+      const skill = await Skill.findByPk(id);
 
-      if (!media) throw { name: "InvalidId" };
+      if (!skill) throw { name: "InvalidId" };
 
-      await media.update({
+      await skill.update({
         title,
-        description,
         image,
       });
 
       res.status(200).json({
-        message: "Success update media",
-        data: media,
+        message: "Success update skill",
+        data: skill,
       });
     } catch (error) {
       console.log(error);
@@ -143,4 +141,4 @@ class MediaController {
   }
 }
 
-module.exports = MediaController;
+module.exports = SkillController;
