@@ -12,7 +12,7 @@ const jobCategory = require('./jobCategory.route');
 const recruitmentJob = require('./recruitmentJob.route');
 
 const team = require('./team.route');
-const divitionCategory = require('./whyUs.route');
+const divitionCategory = require('./divitionCategory.route');
 
 const historyCompany = require('./historyCompany.route');
 const aboutCompany = require('./aboutCompany.route');
