@@ -1,3 +1,4 @@
+const multer = require("multer");
 const {
   jobRecruitmentHistoryLists,
   createJobRecruitmentHistory,
@@ -7,9 +8,11 @@ const {
 } = require("../controllers/jobRecruitmentHistory");
 
 const router = require("express").Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 router.get("/admin/jobrecruitmenthistory/lists", jobRecruitmentHistoryLists);
-router.post("/admin/jobrecruitmenthistory/create", createJobRecruitmentHistory);
+router.post("/admin/jobrecruitmenthistory/create", upload.fields([{ name: 'coverLetter', maxCount: 1 }, { name: 'cv', maxCount: 1 }]), createJobRecruitmentHistory);
 router.get(
   "/admin/:id/jobrecruitmenthistory/detail",
   jobRecruitmentHistoryDetails
