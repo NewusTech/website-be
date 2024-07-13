@@ -30,6 +30,7 @@ const testimony = require('./testimony.route');
 
 const skill = require('./skill.route');
 const whyUs = require('./whyUs.route');
+const technologyportofolio = require('./technologyportofolio.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -63,4 +64,5 @@ module.exports = function (app, urlApi) {
 
     app.use(urlApi, skill);
     app.use(urlApi, whyUs);
+    app.use(urlApi, technologyportofolio);
 }
