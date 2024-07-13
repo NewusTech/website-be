@@ -7,7 +7,7 @@ class MessageHistoryController {
 
       res.status(200).json({
         message: "success get message history",
-        data: message,
+        data: messages,
       });
     } catch (error) {
       console.log(error);
@@ -35,10 +35,11 @@ class MessageHistoryController {
 
   static async createMessageHistory(req, res, next) {
     try {
-      const { name, email, message, subject, phoneNumber } = req.body;
+      const { name, lastname, email, message, subject, phoneNumber } = req.body;
 
       const newMessage = await MessageHistory.create({
         name,
+        lastname,
         email,
         message,
         subject,
