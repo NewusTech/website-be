@@ -104,16 +104,39 @@ class InterRecruitmentController {
   static async updateInternRecruitment(req, res, next) {
     try {
       const { id } = req.params;
-      const { description, coverLetter } = req.body;
+      const { description } = req.body;
+      let fileKey;
 
       const intern = await InternRecruitment.findByPk(id);
 
       if (!intern) throw { name: "InvalidId" };
 
-      await intern.update({ description, coverLetter });
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/internrecruitment/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        fileKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      await intern.update({
+        description,
+        coverLetter: req.file ? fileKey : undefined,
+      });
 
       res.status(200).json({
-        message: "success update internRecruitment",
+        message: "success update intern",
         data: intern,
       });
     } catch (error) {
