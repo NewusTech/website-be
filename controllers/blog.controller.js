@@ -269,65 +269,35 @@ module.exports = {
   },
 
   //mengupdate blog berdasarkan id
-  updateblog: async (req, res) => {
+  updateblog: async (req, res, next) => {
     try {
-      //mendapatkan data blog untuk pengecekan
-      let blogGet = await Blog.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
+      const { id } = req.params;
+      let imageKey;
 
-      //cek apakah data blog ada
-      if (!blogGet) {
-        res.status(404).json(response(404, "blog not found"));
-        return;
+      const blog = await Blog.findByPk(id);
+
+      if (!blog) throw { name: "InvalidId" };
+
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/blog/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
 
-      //membuat schema untuk validasi
-      const schema = {
-        title: {
-          type: "string",
-          min: 3,
-        },
-        keyword: {
-          type: "string",
-          min: 3,
-          optional: true,
-        },
-        excerpt: {
-          type: "string",
-          optional: true,
-        },
-        body: {
-          type: "string",
-          min: 3,
-        },
-        kategoriblog_id: {
-          type: "number",
-          optional: true,
-        },
-        tagblog_id: {
-          type: "number",
-          optional: true,
-        },
-        publishAt: {
-          type: "date",
-          convert: true,
-          optional: true,
-        },
-        image: {
-          type: "string",
-          optional: true,
-        },
-        status: {
-          type: "number",
-          optional: true,
-        },
-      };
-
-      //buat object blog
-      let blogUpdateObj = {
+      await blog.update({
         title: req.body.title,
         slug: slugify(req.body.title, { lower: true }),
         keyword: req.body.keyword,
@@ -336,38 +306,17 @@ module.exports = {
         kategoriblog_id: Number(req.body.kategoriblog_id),
         tagblog_id: Number(req.body.tagblog_id),
         publishAt: req.body.publishAt,
-        image: req.file ? "uploads/blog/" + req.file?.filename : null,
         status: Number(req.body.status),
-      };
-
-      //validasi menggunakan module fastest-validator
-      const validate = v.validate(blogUpdateObj, schema);
-      if (validate.length > 0) {
-        res.status(400).json(response(400, "validation failed", validate));
-        return;
-      }
-
-      //update blog
-      await Blog.update(blogUpdateObj, {
-        where: {
-          id: req.params.id,
-        },
+        image: req.file ? imageKey : blog.image
       });
 
-      //mendapatkan data blog setelah update
-      let blogAfterUpdate = await Blog.findOne({
-        where: {
-          id: req.params.id,
-        },
+      res.status(200).json({
+        message: "success update blog",
+        data: blog,
       });
-
-      //response menggunakan helper response.formatter
-      res
-        .status(200)
-        .json(response(200, "success update blog", blogAfterUpdate));
-    } catch (err) {
-      res.status(500).json(response(500, "internal server error", err));
-      console.log(err);
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
   },
 
