@@ -123,9 +123,6 @@ class TeamController {
     }
   }
   
-  
-  
-
   static async deleteTeam(req, res, next) {
     try {
       const { id } = req.params;
@@ -148,30 +145,60 @@ class TeamController {
   static async updateTeam(req, res, next) {
     try {
       const { id } = req.params;
+      let imageKey;
+      let achievementKey;
       const { name, title, description, DivitionCategoryId } = req.body;
-
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
-
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "team",
-        public_id: originalname,
-      });
-
-      const image = result.secure_url;
 
       const team = await Team.findByPk(id);
 
       if (!team) throw { name: "InvalidId" };
 
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/team/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      // Handle achievement upload
+      if (req.files && req.files.achievement) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/team/achievements/${uniqueFileName}`,
+          Body: req.files.achievement[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.achievement[0].mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
       await team.update({
         name,
         title,
         description,
-        image,
+        image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
+        achievement: req.files && req.files.achievement ? achievementKey : undefined,
         DivitionCategoryId: divitionCategoryIdInt,
       });
 
