@@ -1,5 +1,5 @@
 const { CLient } = require("../models/index");
-const { response } = require('../helpers/response.formatter');
+const { response } = require("../helpers/response.formatter");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const s3Client = new S3Client({
@@ -7,9 +7,8 @@ const s3Client = new S3Client({
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  }
+  },
 });
-
 
 class ClientController {
   static async clientLists(req, res, next) {
@@ -58,8 +57,8 @@ class ClientController {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/client/${uniqueFileName}`,
           Body: req.file.buffer,
-          ACL: 'public-read',
-          ContentType: req.file.mimetype
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
         };
 
         const command = new PutObjectCommand(uploadParams);
@@ -71,14 +70,16 @@ class ClientController {
 
       const dataCreate = {
         title: title,
-        image: req.file ? imageKey : undefined
-      }
+        image: req.file ? imageKey : undefined,
+      };
 
       const createClient = await CLient.create(dataCreate);
 
-      res.status(201).json(response(201, 'success create instansi', createClient));
+      res
+        .status(201)
+        .json(response(201, "success create instansi", createClient));
     } catch (err) {
-      res.status(500).json(response(500, 'internal server error', err));
+      res.status(500).json(response(500, "internal server error", err));
       console.log(err);
     }
   }
@@ -102,57 +103,50 @@ class ClientController {
       next(error);
     }
   }
-  
 
- static async updateClient(req, res, next) {
-  try {
-    const { id } = req.params;
-    const { title } = req.body;
+  static async updateClient(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { title } = req.body;
+      let imageKey;
 
-    const client = await CLient.findByPk(id);
+      const client = await CLient.findByPk(id);
 
-    if (!client) throw { name: "InvalidId" };
+      if (!client) throw { name: "InvalidId" };
 
-    let imageKey;
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-    if (req.file) {
-      const timestamp = new Date().getTime();
-      const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/client/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        };
 
-      const uploadParams = {
-        Bucket: process.env.AWS_BUCKET,
-        Key: `webnewus/client/${uniqueFileName}`,
-        Body: req.file.buffer,
-        ACL: 'public-read',
-        ContentType: req.file.mimetype
-      };
+        const command = new PutObjectCommand(uploadParams);
 
-      const command = new PutObjectCommand(uploadParams);
+        await s3Client.send(command);
 
-      await s3Client.send(command);
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
 
-      imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      await client.update({
+        title,
+        image: req.file ? imageKey : undefined,
+      });
+
+      res.status(200).json({
+        message: "success update client",
+        data: client,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
-
-    const dataUpdate = {
-      title: title,
-      image: req.file ? imageKey : client.image // update image only if new file is uploaded
-    };
-
-    // Add where clause to specify which client to update
-    await CLient.update(dataUpdate, {
-      where: { id: id }
-    });
-
-    const updatedClient = await CLient.findByPk(id); // Fetch the updated client data
-
-    res.status(200).json(response(200, 'success update client', updatedClient));
-  } catch (err) {
-    res.status(500).json(response(500, 'internal server error', err));
-    console.log(err);
   }
-}
-
 }
 
 module.exports = ClientController;
