@@ -110,29 +110,35 @@ class ServiceController {
     try {
       const { id } = req.params;
       const { title, description } = req.body;
+      let imageKey;
 
       const service = await Service.findByPk(id);
 
       if (!service) throw { name: "InvalidId" };
 
-      // configuration for uploading file image uses cloudinary
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        // result to save image upload to folder
-        folder: "services",
-        // for naming file upload
-        public_id: originalname,
-      });
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-      // to get image url from cloudinary
-      const image = result.secure_url;
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/service/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
 
       await service.update({
         title,
         description,
-        image: image,
+        image: req.file ? imageKey : undefined
       });
 
       res.status(200).json({
