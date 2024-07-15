@@ -108,30 +108,39 @@ class WhyUsController {
   static async updateWhyUs(req, res, next) {
     try {
       const { id } = req.params;
-      const {description } = req.body;
-
-      const { mimetype, buffer, originalname } = req.file;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const dataURI = `data:${mimetype};base64,${base64}`;
-
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "whyus",
-        public_id: originalname,
-      });
-
-      const image = result.secure_url;
+      const { description } = req.body;
+      let imageKey;
 
       const whyus = await WhyUs.findByPk(id);
 
       if (!whyus) throw { name: "InvalidId" };
 
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/whyus/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
       await whyus.update({
         description,
-        image,
+        image: req.file ? imageKey : undefined,
       });
 
       res.status(200).json({
-        message: "Success update why us",
+        message: "success update why us",
         data: whyus,
       });
     } catch (error) {
