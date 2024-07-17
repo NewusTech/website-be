@@ -137,6 +137,24 @@ class AboutCompanyController {
     }
   }
 
+  static async aboutCompanyDetails(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const company = await AboutCompany.findByPk(id);
+
+      if (!company) throw { name: "InvalidId" };
+
+      res.status(200).json({
+        message: "success get aboutcompany detail",
+        data: company,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
   static async updateAboutCompany(req, res, next) {
     try {
       const { id } = req.params;
