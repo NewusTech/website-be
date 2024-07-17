@@ -75,6 +75,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       siteTitle: DataTypes.STRING,
       siteDescription: DataTypes.STRING,
+      footerDescription: DataTypes.STRING,
       siteLogo: DataTypes.STRING,
       footerLogo: DataTypes.STRING,
       favicon: DataTypes.STRING,

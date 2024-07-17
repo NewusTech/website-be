@@ -27,7 +27,7 @@ class AboutCompanyController {
 
   static async addAboutCompany(req, res, next) {
     try {
-      const { body, vision, mission, address, email, phoneNumber, siteTitle, siteDescription } = req.body;
+      const { body, vision, mission, address, email, phoneNumber, siteTitle, siteDescription, footerDescription } = req.body;
       
       let siteLogoKey;
       let footerLogoKey;
@@ -102,6 +102,7 @@ class AboutCompanyController {
         phoneNumber,
         siteTitle,
         siteDescription,
+        footerDescription,
         siteLogo: req.files && req.files.siteLogo ? siteLogoKey : undefined,
         footerLogo: req.files && req.files.footerLogo ? footerLogoKey : undefined,
         favicon: req.files && req.files.favicon ? faviconKey : undefined,
@@ -139,7 +140,7 @@ class AboutCompanyController {
   static async updateAboutCompany(req, res, next) {
     try {
       const { id } = req.params;
-      const { body, vision, mission, address, email, phoneNumber, siteTitle, siteDescription} = req.body;
+      const { body, vision, mission, address, email, phoneNumber, siteTitle, siteDescription, footerDescription} = req.body;
 
       let siteLogoKey;
       let footerLogoKey;
@@ -217,6 +218,7 @@ class AboutCompanyController {
         phoneNumber,
         siteTitle,
         siteDescription,
+        footerDescription,
         siteLogo: req.files && req.files.siteLogo ? siteLogoKey : undefined,
         footerLogo: req.files && req.files.footerLogo ? footerLogoKey : undefined,
         favicon: req.files && req.files.favicon ? faviconKey : undefined,
