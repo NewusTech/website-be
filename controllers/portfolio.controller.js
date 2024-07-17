@@ -251,6 +251,9 @@ class PortfolioController {
         appsLink,
       } = req.body;
 
+      let imageKey;
+      let logoKey;
+  
       const portfolio = await Portfolio.findByPk(id);
 
       if (!portfolio) throw { name: "InvalidId" };
@@ -259,8 +262,6 @@ class PortfolioController {
       if (typeof title !== 'string') {
         throw { name: "InvalidTitle", message: "Title must be a string" };
       }
-
-      let imageKey;
 
       if (req.file) {
         const timestamp = new Date().getTime();
@@ -279,6 +280,27 @@ class PortfolioController {
         await s3Client.send(command);
 
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      
+      // Handle logo upload
+      if (req.files && req.files.logo) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
+  
+        const uploadParams = {
+          Bucket: process.env.AWS_BUCKET,
+          Key: `webnewus/portofolio/${uniqueFileName}`,
+          Body: req.files.logo[0].buffer,
+          ACL: 'public-read',
+          ContentType: req.files.logo[0].mimetype
+        };
+  
+        const command = new PutObjectCommand(uploadParams);
+  
+        await s3Client.send(command);
+  
+        logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
 
       const dataUpdate = {
