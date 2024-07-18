@@ -143,50 +143,50 @@ class PortfolioController {
         webLink,
         appsLink,
       } = req.body;
-  
+
       let imageKey;
       let logoKey;
-  
+
       // Handle image upload
       if (req.files && req.files.image) {
         const timestamp = new Date().getTime();
         const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
-  
+
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/portofolio/${uniqueFileName}`,
           Body: req.files.image[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.image[0].mimetype
+          ACL: "public-read",
+          ContentType: req.files.image[0].mimetype,
         };
-  
+
         const command = new PutObjectCommand(uploadParams);
-  
+
         await s3Client.send(command);
-  
+
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-  
+
       // Handle logo upload
       if (req.files && req.files.logo) {
         const timestamp = new Date().getTime();
         const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
-  
+
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/portofolio/${uniqueFileName}`,
           Body: req.files.logo[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.logo[0].mimetype
+          ACL: "public-read",
+          ContentType: req.files.logo[0].mimetype,
         };
-  
+
         const command = new PutObjectCommand(uploadParams);
-  
+
         await s3Client.send(command);
-  
+
         logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-  
+
       const dataCreate = {
         title,
         slug: slugify(title, { lower: true }),
@@ -199,16 +199,16 @@ class PortfolioController {
         appsLink,
         portfolioYear: String(new Date()),
         image: req.files && req.files.image ? imageKey : undefined,
-        logo: req.files && req.files.logo ? logoKey : undefined
+        logo: req.files && req.files.logo ? logoKey : undefined,
       };
-  
+
       const newPortfolio = await Portfolio.create(dataCreate);
-  
+
       res
         .status(201)
-        .json(response(201, 'success create new portfolio', newPortfolio));
+        .json(response(201, "success create new portfolio", newPortfolio));
     } catch (err) {
-      res.status(500).json(response(500, 'internal server error', err));
+      res.status(500).json(response(500, "internal server error", err));
       console.log(err);
     }
   }
@@ -250,62 +250,53 @@ class PortfolioController {
         webLink,
         appsLink,
       } = req.body;
-
       let imageKey;
       let logoKey;
   
-      const portfolio = await Portfolio.findByPk(id);
-
-      if (!portfolio) throw { name: "InvalidId" };
-
-      // Ensure title is a string
-      if (typeof title !== 'string') {
-        throw { name: "InvalidTitle", message: "Title must be a string" };
+      const portofolio = await Portfolio.findByPk(id);
+  
+      if (!portofolio) throw { name: "InvalidId" };
+  
+      if (req.files) {
+        if (req.files.image) {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+  
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/portofolio/${uniqueFileName}`,
+            Body: req.files.image[0].buffer,
+            ACL: "public-read",
+            ContentType: req.files.image[0].mimetype,
+          };
+  
+          const command = new PutObjectCommand(uploadParams);
+          await s3Client.send(command);
+  
+          imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+  
+        if (req.files.logo) {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
+  
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/portofolio/${uniqueFileName}`,
+            Body: req.files.logo[0].buffer,
+            ACL: "public-read",
+            ContentType: req.files.logo[0].mimetype,
+          };
+  
+          const command = new PutObjectCommand(uploadParams);
+          await s3Client.send(command);
+  
+          logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
       }
-
-      if (req.file) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
-
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/portofolio/${uniqueFileName}`,
-          Body: req.file.buffer,
-          ACL: "public-read",
-          ContentType: req.file.mimetype,
-        };
-
-        const command = new PutObjectCommand(uploadParams);
-
-        await s3Client.send(command);
-
-        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
-
-      
-      // Handle logo upload
-      if (req.files && req.files.logo) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
   
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/portofolio/${uniqueFileName}`,
-          Body: req.files.logo[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.logo[0].mimetype
-        };
-  
-        const command = new PutObjectCommand(uploadParams);
-  
-        await s3Client.send(command);
-  
-        logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
-
-      const dataUpdate = {
+      await portofolio.update({
         title,
-        slug: slugify(title, { lower: true }),
         keyword,
         excerpt,
         body,
@@ -313,30 +304,20 @@ class PortfolioController {
         KategoriportofolioId,
         webLink,
         appsLink,
-        portfolioYear: new Date().getFullYear(), // Change to get only the year
-        image: req.file ? imageKey : undefined,
-        logo: req.file ? logoKey : undefined, // update image only if new file is uploaded
-      };
-
-      // Add where clause to specify which portfolio to update
-      await Portfolio.update(dataUpdate, {
-        where: { id },
+        image: imageKey || portofolio.image,
+        logo: logoKey || portofolio.logo,
       });
-
-      const updatedPortfolio = await Portfolio.findByPk(id); // Fetch the updated portfolio data
-
+  
       res.status(200).json({
-        message: "Successfully updated portfolio",
-        data: updatedPortfolio,
+        message: "success update portofolio",
+        data: portofolio,
       });
-    } catch (err) {
-      res.status(500).json({
-        message: "Internal server error",
-        error: err.message || err,
-      });
-      console.log(err);
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
   }
+  
 }
 
 module.exports = PortfolioController;
