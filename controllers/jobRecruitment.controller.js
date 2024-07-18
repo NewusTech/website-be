@@ -185,32 +185,61 @@ class JobRecruitmentController {
 
   static async updateJobRecruitment(req, res, next) {
     try {
-      const { id } = req.params;
-      const { title, description, salary, status, coverLetter, JobCategoryId } =
-        req.body;
+        const { id } = req.params;
+        let coverLetterKey;
 
-      const jobRecruitment = await RecruitmentJob.findByPk(id);
+        const jobRecruitment = await RecruitmentJob.findByPk(id);
 
-      if (!jobRecruitment) throw { name: "InvalidId" };
+        if (!jobRecruitment) throw { name: "InvalidId" };
 
-      await jobRecruitment.update({
-        title,
-        description,
-        salary,
-        status,
-        coverLetter,
-        JobCategoryId,
-      });
+        // Validate JobCategoryId existence in jobcategories table
+        const jobCategory = await JobCategory.findByPk(Number(req.body.JobCategoryId));
+        if (!jobCategory) {
+            throw { name: "InvalidJobCategory", message: "Job Category not found" };
+        }
 
-      res.status(200).json({
-        message: "Success updating job recruitment",
-        data: jobRecruitment,
-      });
+        if (req.file) {
+            const timestamp = new Date().getTime();
+            const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+            const uploadParams = {
+                Bucket: process.env.AWS_BUCKET,
+                Key: `webnewus/jobRecruitment/${uniqueFileName}`,
+                Body: req.file.buffer,
+                ACL: 'public-read',
+                ContentType: req.file.mimetype
+            };
+
+            const command = new PutObjectCommand(uploadParams);
+
+            await s3Client.send(command);
+
+            coverLetterKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+
+        await jobRecruitment.update({
+            title: req.body.title,
+            description: req.body.description,
+            salary: req.body.salary,
+            status: req.body.status,
+            JobCategoryId: Number(req.body.JobCategoryId),
+            coverLetter: req.file ? coverLetterKey : jobRecruitment.coverLetter
+        });
+
+        res.status(200).json({
+            message: "success update job",
+            data: jobRecruitment,
+        });
     } catch (error) {
-      console.log(error);
-      next(error);
+        console.error(error);
+        if (error.name === "InvalidJobCategory") {
+            res.status(400).json({ error: error.message });
+        } else {
+            next(error);
+        }
     }
-  }
+}
+
 }
 
 module.exports = JobRecruitmentController;

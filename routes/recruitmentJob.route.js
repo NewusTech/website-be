@@ -16,6 +16,6 @@ router.get("/admin/jobrecruitment/lists", jobRecruitmentLists);
 router.post("/admin/jobrecruitment/new-job", [mid.isLogin, mid.isLogout], upload.single('coverLetter'), newJobRecruitment);
 router.get("/admin/:id/jobrecruitment/detail", jobRecruitmentDetail);
 router.delete("/admin/:id/jobrecruitment/delete", [mid.isLogin, mid.isLogout], deleteJobRecruitment);
-router.put("/admin/:id/jobrecruitment/update", [mid.isLogin, mid.isLogout], updateJobRecruitment);
+router.put("/admin/:id/jobrecruitment/update", [mid.isLogin, mid.isLogout], upload.single('coverLetter'), updateJobRecruitment);
 
 module.exports = router;
