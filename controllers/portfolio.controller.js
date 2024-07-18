@@ -314,7 +314,8 @@ class PortfolioController {
         webLink,
         appsLink,
         portfolioYear: new Date().getFullYear(), // Change to get only the year
-        image: req.file ? imageKey : portfolio.image, // update image only if new file is uploaded
+        image: req.file ? imageKey : undefined,
+        logo: req.file ? logoKey : undefined, // update image only if new file is uploaded
       };
 
       // Add where clause to specify which portfolio to update
