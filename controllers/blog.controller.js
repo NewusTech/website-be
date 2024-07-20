@@ -323,39 +323,31 @@ module.exports = {
   //menghapus blog berdasarkan id
   deleteblog: async (req, res) => {
     try {
-      //mendapatkan data blog untuk pengecekan
-      let blogGet = await Blog.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
 
-      //cek apakah data blog ada
-      if (!blogGet) {
-        res.status(404).json(response(404, "blog not found"));
-        return;
-      }
+      //mendapatkan data kategoriblog untuk pengecekan
+      let blog = await Blog.findOne({
+          where:{
+              id : req.params.id
+          }
+      })
 
-      // Hapus gambar terkait jika ada
-      if (blogGet.image) {
-        // Mendapatkan path lengkap ke gambar
-        const imagePath = path.join(__dirname, "..", blogGet.image);
-
-        // Hapus gambar dari sistem file
-        fs.unlinkSync(imagePath);
+      //cek apakah data kategoriblog ada
+      if(!blog){
+          res.status(404).json(response(404,'kategoriblog not found'));
+          return;
       }
 
       await Blog.destroy({
-        where: {
-          id: req.params.id,
-        },
-      });
-
+          where:{
+              id: req.params.id,
+          }
+      })
       //response menggunakan helper response.formatter
-      res.status(200).json(response(200, "success delete blog"));
-    } catch (err) {
-      res.status(500).json(response(500, "internal server error", err));
+      res.status(200).json(response(200,'success delete kategoriblog'));
+
+  } catch (err) {
+      res.status(500).json(response(500,'internal server error', err));
       console.log(err);
-    }
+  }
   },
 };
