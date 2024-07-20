@@ -4,6 +4,7 @@ const {
   Kategoriportofolio,
   Tagportofolio,
   Portfolio,
+  TechnologyPortofolio
 } = require("../models/index");
 const { default: slugify } = require("slugify");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -71,6 +72,10 @@ class PortfolioController {
           model: Tagportofolio,
           attributes: ["title", "createdAt"],
         },
+        {
+          model: TechnologyPortofolio,
+          attributes: ["title","image", "createdAt"],
+        },
       ];
 
       // using method findAndCountAll from sequelize documentation
@@ -118,6 +123,10 @@ class PortfolioController {
             model: Tagportofolio,
             attributes: ["title", "createdAt"],
           },
+          {
+            model: TechnologyPortofolio,
+            attributes: ["title", "image", "createdAt"],
+          },
         ],
       });
 
@@ -140,18 +149,21 @@ class PortfolioController {
         body,
         TagportofolioId,
         KategoriportofolioId,
+        TechnologyPortofolioId,
+        closingDescription,
         webLink,
         appsLink,
       } = req.body;
-
+  
       let imageKey;
       let logoKey;
-
+      let galeriKey = [];
+  
       // Handle image upload
       if (req.files && req.files.image) {
         const timestamp = new Date().getTime();
         const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
-
+  
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/portofolio/${uniqueFileName}`,
@@ -159,19 +171,19 @@ class PortfolioController {
           ACL: "public-read",
           ContentType: req.files.image[0].mimetype,
         };
-
+  
         const command = new PutObjectCommand(uploadParams);
-
+  
         await s3Client.send(command);
-
+  
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-
+  
       // Handle logo upload
       if (req.files && req.files.logo) {
         const timestamp = new Date().getTime();
         const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
-
+  
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/portofolio/${uniqueFileName}`,
@@ -179,14 +191,39 @@ class PortfolioController {
           ACL: "public-read",
           ContentType: req.files.logo[0].mimetype,
         };
-
+  
         const command = new PutObjectCommand(uploadParams);
-
+  
         await s3Client.send(command);
-
+  
         logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
+  
+      // Handle gallery upload
+      if (req.files && req.files.galeri) {
+        for (let file of req.files.galeri) {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${file.originalname}`;
+  
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/portofolio/${uniqueFileName}`,
+            Body: file.buffer,
+            ACL: "public-read",
+            ContentType: file.mimetype,
+          };
+  
+          const command = new PutObjectCommand(uploadParams);
+  
+          await s3Client.send(command);
+  
+          galeriKey.push(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`);
+        }
+      }
 
+      // Convert galleryKeys array to JSON string
+      const galeriKeyJson = JSON.stringify(galeriKey);
+  
       const dataCreate = {
         title,
         slug: slugify(title, { lower: true }),
@@ -195,15 +232,18 @@ class PortfolioController {
         body,
         TagportofolioId,
         KategoriportofolioId,
+        TechnologyPortofolioId,
+        closingDescription,
         webLink,
         appsLink,
         portfolioYear: String(new Date()),
         image: req.files && req.files.image ? imageKey : undefined,
         logo: req.files && req.files.logo ? logoKey : undefined,
+        galeri: galeriKey.length > 0 ? galeriKeyJson : undefined,
       };
-
+  
       const newPortfolio = await Portfolio.create(dataCreate);
-
+  
       res
         .status(201)
         .json(response(201, "success create new portfolio", newPortfolio));
@@ -212,6 +252,7 @@ class PortfolioController {
       console.log(err);
     }
   }
+  
 
   // method for deleting portfolio
   static async deletePortfolio(req, res, next) {
@@ -247,6 +288,8 @@ class PortfolioController {
         body,
         TagportofolioId,
         KategoriportofolioId,
+        TechnologyPortofolioId,
+        closingDescription,
         webLink,
         appsLink,
       } = req.body;
@@ -302,6 +345,8 @@ class PortfolioController {
         body,
         TagportofolioId,
         KategoriportofolioId,
+        TechnologyPortofolioId,
+        closingDescription,
         webLink,
         appsLink,
         image: imageKey || portofolio.image,

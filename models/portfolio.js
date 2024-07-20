@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Portfolio.belongsTo(models.Kategoriportofolio);
       Portfolio.belongsTo(models.Tagportofolio);
+      Portfolio.belongsTo(models.TechnologyPortofolio);
     }
   }
   Portfolio.init(
@@ -141,6 +142,18 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       TagportofolioId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      TechnologyPortofolioId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      galeri: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      closingDescription: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
