@@ -14,6 +14,6 @@ route.get('/admin/blog/get', blogController.getblog);
 route.get("/admin/:slug/blog/detail", blogController.getBlogBySlug);
 route.get('/admin/blog/get/:id', blogController.getblogById);
 route.put('/admin/blog/update/:id', [mid.isLogin, mid.isLogout], upload.single('image'), blogController.updateblog);
-route.delete('/admin/blog/delete/:id', [mid.isLogin, mid.isLogout], blogController.deleteblog);
+route.delete('/admin/blog/delete/:id', blogController.deleteblog);
 
 module.exports = route;
