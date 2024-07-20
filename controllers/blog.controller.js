@@ -343,7 +343,7 @@ module.exports = {
           }
       })
       //response menggunakan helper response.formatter
-      res.status(200).json(response(200,'success delete kategoriblog'));
+      res.status(200).json(response(200,'success delete blog'));
 
   } catch (err) {
       res.status(500).json(response(500,'internal server error', err));
