@@ -4,7 +4,8 @@ const {
   Kategoriportofolio,
   Tagportofolio,
   Portfolio,
-  TechnologyPortofolio
+  TechnologyPortofolio,
+  Galeri
 } = require("../models/index");
 const { default: slugify } = require("slugify");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -76,6 +77,11 @@ class PortfolioController {
           model: TechnologyPortofolio,
           attributes: ["title","image", "createdAt"],
         },
+        {
+          model: Galeri,
+          as: 'galeri',
+          attributes: ["image"],
+        },
       ];
 
       // using method findAndCountAll from sequelize documentation
@@ -140,6 +146,119 @@ class PortfolioController {
     }
   }
 
+  // static async newPortfolio(req, res, next) {
+  //   try {
+  //     const {
+  //       title,
+  //       keyword,
+  //       excerpt,
+  //       body,
+  //       TagportofolioId,
+  //       KategoriportofolioId,
+  //       TechnologyPortofolioId,
+  //       closingDescription,
+  //       webLink,
+  //       appsLink,
+  //     } = req.body;
+  
+  //     let imageKey;
+  //     let logoKey;
+  //     let galeriKey = [];
+  
+  //     // Handle image upload
+  //     if (req.files && req.files.image) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+  
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/portofolio/${uniqueFileName}`,
+  //         Body: req.files.image[0].buffer,
+  //         ACL: "public-read",
+  //         ContentType: req.files.image[0].mimetype,
+  //       };
+  
+  //       const command = new PutObjectCommand(uploadParams);
+  
+  //       await s3Client.send(command);
+  
+  //       imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+  
+  //     // Handle logo upload
+  //     if (req.files && req.files.logo) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.logo[0].originalname}`;
+  
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/portofolio/${uniqueFileName}`,
+  //         Body: req.files.logo[0].buffer,
+  //         ACL: "public-read",
+  //         ContentType: req.files.logo[0].mimetype,
+  //       };
+  
+  //       const command = new PutObjectCommand(uploadParams);
+  
+  //       await s3Client.send(command);
+  
+  //       logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+  
+  //     // Handle gallery upload
+  //     if (req.files && req.files.galeri) {
+  //       for (let file of req.files.galeri) {
+  //         const timestamp = new Date().getTime();
+  //         const uniqueFileName = `${timestamp}-${file.originalname}`;
+  
+  //         const uploadParams = {
+  //           Bucket: process.env.AWS_BUCKET,
+  //           Key: `webnewus/portofolio/${uniqueFileName}`,
+  //           Body: file.buffer,
+  //           ACL: "public-read",
+  //           ContentType: file.mimetype,
+  //         };
+  
+  //         const command = new PutObjectCommand(uploadParams);
+  
+  //         await s3Client.send(command);
+  
+  //         galeriKey.push(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`);
+  //       }
+  //     }
+
+  //     // Convert galleryKeys array to JSON string
+  //     const galeriKeyJson = JSON.stringify(galeriKey);
+  
+  //     const dataCreate = {
+  //       title,
+  //       slug: slugify(title, { lower: true }),
+  //       keyword,
+  //       excerpt,
+  //       body,
+  //       TagportofolioId,
+  //       KategoriportofolioId,
+  //       TechnologyPortofolioId,
+  //       closingDescription,
+  //       webLink,
+  //       appsLink,
+  //       portfolioYear: String(new Date()),
+  //       image: req.files && req.files.image ? imageKey : undefined,
+  //       logo: req.files && req.files.logo ? logoKey : undefined,
+  //       galeri: galeriKey.length > 0 ? galeriKeyJson : undefined,
+  //     };
+  
+  //     const newPortfolio = await Portfolio.create(dataCreate);
+  
+  //     res
+  //       .status(201)
+  //       .json(response(201, "success create new portfolio", newPortfolio));
+  //   } catch (err) {
+  //     res.status(500).json(response(500, "internal server error", err));
+  //     console.log(err);
+  //   }
+  // }
+  
   static async newPortfolio(req, res, next) {
     try {
       const {
@@ -173,9 +292,7 @@ class PortfolioController {
         };
   
         const command = new PutObjectCommand(uploadParams);
-  
         await s3Client.send(command);
-  
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
   
@@ -193,9 +310,7 @@ class PortfolioController {
         };
   
         const command = new PutObjectCommand(uploadParams);
-  
         await s3Client.send(command);
-  
         logoKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
   
@@ -214,13 +329,11 @@ class PortfolioController {
           };
   
           const command = new PutObjectCommand(uploadParams);
-  
           await s3Client.send(command);
-  
           galeriKey.push(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`);
         }
       }
-
+  
       // Convert galleryKeys array to JSON string
       const galeriKeyJson = JSON.stringify(galeriKey);
   
@@ -236,24 +349,29 @@ class PortfolioController {
         closingDescription,
         webLink,
         appsLink,
-        portfolioYear: String(new Date()),
+        portfolioYear: String(new Date().getFullYear()),
         image: req.files && req.files.image ? imageKey : undefined,
         logo: req.files && req.files.logo ? logoKey : undefined,
-        galeri: galeriKey.length > 0 ? galeriKeyJson : undefined,
       };
   
       const newPortfolio = await Portfolio.create(dataCreate);
   
-      res
-        .status(201)
-        .json(response(201, "success create new portfolio", newPortfolio));
+      // Create entries in Galeri table for each gallery image
+      if (galeriKey.length > 0) {
+        for (let imageUrl of galeriKey) {
+          await Galeri.create({
+            image: imageUrl,
+            PortofolioId: newPortfolio.id,
+          });
+        }
+      }
+  
+      res.status(201).json({ status: 201, message: "Success create new portfolio", data: newPortfolio });
     } catch (err) {
-      res.status(500).json(response(500, "internal server error", err));
-      console.log(err);
+      res.status(500).json({ status: 500, message: "Internal server error", error: err });
+      console.error(err);
     }
   }
-  
-
   // method for deleting portfolio
   static async deletePortfolio(req, res, next) {
     try {

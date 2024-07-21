@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
       Portfolio.belongsTo(models.Kategoriportofolio);
       Portfolio.belongsTo(models.Tagportofolio);
       Portfolio.belongsTo(models.TechnologyPortofolio);
+      Portfolio.hasMany(models.Galeri, {
+        foreignKey: 'PortofolioId',
+        as: 'galeri'
+      });
     }
   }
   Portfolio.init(
@@ -146,10 +150,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       TechnologyPortofolioId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      galeri: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
