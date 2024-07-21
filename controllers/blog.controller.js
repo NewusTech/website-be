@@ -1,7 +1,7 @@
 //kode dari file Blog.controller.js
 
 const { response } = require("../helpers/response.formatter");
-const { Blog, Kategoriblog, Tagblog, User } = require("../models");
+const { Blog, Kategoriblog, Tagblog, User, RecomendationBlog} = require("../models");
 const slugify = require("slugify");
 const Validator = require("fastest-validator");
 const fs = require("fs");
@@ -350,4 +350,21 @@ module.exports = {
       console.log(err);
   }
   },
+
+  getRecomendationBlog: async (req, res) => {
+    const recommendations = await RecomendationBlog.findAll({
+      include: [
+        {
+          model: Blog,
+          as: 'blog',
+          // attributes: ['id', 'title', 'image', 'webLink'], // Sesuaikan dengan atribut yang ingin ditampilkan
+        }
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      data: recommendations
+    });
+  }
 };
