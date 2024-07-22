@@ -17,4 +17,5 @@ route.put('/admin/blog/update/:id', [mid.isLogin, mid.isLogout], upload.single('
 route.delete('/admin/blog/delete/:id', blogController.deleteblog);
 route.get('/admin/blog/recomendation', blogController.getRecomendationBlog);
 
+
 module.exports = route;
