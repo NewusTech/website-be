@@ -59,5 +59,31 @@ module.exports = {
         res.status(500).json(response(500,'internal server error', err));
         console.log(err);
     }
-},
+  },
+
+  getBlogRecomendationId: async (req, res) => {
+    try {
+      // mendapatkan semua data blog berdasarkan slug
+      let recommendations = await RecomendationBlog.findAll({
+        where: {
+          id: req.params.id,
+        },
+        include: [
+          {
+            model: Blog,
+            as: 'blog',
+            // attributes: ['id', 'title', 'image', 'webLink'], // Sesuaikan dengan atribut yang ingin ditampilkan
+          }
+        ]
+      });
+
+        res.status(200).json({
+          success: true,
+          data: recommendations
+        });
+    } catch (err) {
+      res.status(500).json(response(500, "internal server error", err));
+      console.log(err);
+    }
+  },
 };

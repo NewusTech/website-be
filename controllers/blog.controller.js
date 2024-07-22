@@ -30,6 +30,7 @@ module.exports = {
         kategoriblog_id,
         tagblog_id,
         publishAt,
+        altImage,
         status,
         // TagportofolioId,
         // KategoriportofolioId,
@@ -64,6 +65,7 @@ module.exports = {
         excerpt,
         body,
         status,
+        altImage,
         publishAt,
         kategoriblog_id,
         tagblog_id,
@@ -115,6 +117,7 @@ module.exports = {
           keyword: blog.keyword,
           excerpt: blog.excerpt,
           body: blog.body,
+          altImage: blog.altImage,
           kategoriblog_id: blog.Kategoriblog?.id, // Menggunakan operator ?. untuk memeriksa keberadaan Kategoriblog
           kategoriblog_title: blog.Kategoriblog?.title,
           tagblog_id: blog.Tagblog?.id, // Menggunakan operator ?. untuk memeriksa keberadaan Tagblog
@@ -179,6 +182,7 @@ module.exports = {
         keyword: blogGet.keyword,
         excerpt: blogGet.excerpt,
         body: blogGet.body,
+        altImage: blogGet.altImage,
         kategoriblog_id: blogGet.Kategoriblog?.id,
         kategoriblog_title: blogGet.Kategoriblog?.title,
         tagblog_id: blogGet.Tagblog?.id,
@@ -244,6 +248,7 @@ module.exports = {
         keyword: blog.keyword,
         excerpt: blog.excerpt,
         body: blog.body,
+        altImage: blog.altImage,
         kategoriblog_id: blog.Kategoriblog?.id,
         kategoriblog_title: blog.Kategoriblog?.title,
         tagblog_id: blog.Tagblog?.id,
@@ -302,6 +307,7 @@ module.exports = {
         slug: slugify(req.body.title, { lower: true }),
         keyword: req.body.keyword,
         excerpt: req.body.excerpt,
+        altImage: req.body.altImage,
         body: req.body.body,
         kategoriblog_id: Number(req.body.kategoriblog_id),
         tagblog_id: Number(req.body.tagblog_id),
@@ -351,20 +357,4 @@ module.exports = {
   }
   },
 
-  getRecomendationBlog: async (req, res) => {
-    const recommendations = await RecomendationBlog.findAll({
-      include: [
-        {
-          model: Blog,
-          as: 'blog',
-          // attributes: ['id', 'title', 'image', 'webLink'], // Sesuaikan dengan atribut yang ingin ditampilkan
-        }
-      ]
-    });
-
-    res.status(200).json({
-      success: true,
-      data: recommendations
-    });
-  }
 };

@@ -93,6 +93,10 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      altImage: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       logo: {
         type: DataTypes.STRING,
         allowNull: false,
