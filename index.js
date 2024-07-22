@@ -10,7 +10,7 @@ const cors = require('cors');
 const express = require('express')
 const error = require('./errorHandler/errorHandler')
 const app = express();
-const port = 3010;
+const port = 8000;
 const urlApi = "/api";
 
 // Mengaktifkan CORS untuk semua permintaan

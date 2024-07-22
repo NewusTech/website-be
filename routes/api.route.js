@@ -32,7 +32,9 @@ const skill = require('./skill.route');
 const whyUs = require('./whyUs.route');
 const technologyportofolio = require('./technologyportofolio.route');
 const seo = require('./seo.route');
+
 const recomendationblog = require('./recomendationBlog.route');
+const legalitas = require('./legalitas.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -69,4 +71,6 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, technologyportofolio);
     app.use(urlApi, seo);
     app.use(urlApi, recomendationblog);
+
+    app.use(urlApi, legalitas);
 }
