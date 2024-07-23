@@ -133,6 +133,11 @@ class PortfolioController {
             model: TechnologyPortofolio,
             attributes: ["title", "image", "createdAt"],
           },
+          {
+            model: Galeri,
+            as: 'galeri',
+            attributes: ["image"],
+          },
         ],
       });
 
