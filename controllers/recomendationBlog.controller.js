@@ -36,11 +36,11 @@ module.exports = {
       };
 
       // Validasi menggunakan module fastest-validator
-      const validate = v.validate(recomendationblogCreateObj, schema);
-      if (validate.length > 0) {
-        res.status(400).json(response(400, 'validation failed', validate));
-        return;
-      }
+      // const validate = v.validate(recomendationblogCreateObj, schema);
+      // if (validate.length > 0) {
+      //   res.status(400).json(response(400, 'validation failed', validate));
+      //   return;
+      // }
 
       // Buat rekomendasi blog
       let recomendationblogCreate = await RecomendationBlog.create(recomendationblogCreateObj);
