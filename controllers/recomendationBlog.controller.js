@@ -24,10 +24,10 @@ module.exports = {
   createRecomendationBlog : async (req, res) => {
     try {
       // Membuat skema untuk validasi
-      const schema = {
-        BlogId: { type: "number", integer: true, required: true },
-        status: { type: "number", integer: true, required: true }
-      };
+      // const schema = {
+      //   BlogId: { type: "number", integer: true, required: true },
+      //   status: { type: "number", integer: true, required: true }
+      // };
 
       // Membuat objek rekomendasi blog
       let recomendationblogCreateObj = {
