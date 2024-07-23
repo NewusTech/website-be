@@ -25,8 +25,8 @@ module.exports = {
     try {
       // Membuat skema untuk validasi
       const schema = {
-        BlogId: { type: "number", integer: true },
-        status: { type: "number", integer: true }
+        BlogId: { type: "number", integer: true, required: true },
+        status: { type: "number", integer: true, required: true }
       };
 
       // Membuat objek rekomendasi blog
