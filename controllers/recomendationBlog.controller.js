@@ -1,9 +1,6 @@
-
 const { response } = require("../helpers/response.formatter");
 const { Blog, RecomendationBlog} = require("../models");
 const Validator = require("fastest-validator");
-const fs = require("fs");
-const path = require("path");
 const v = new Validator();
 
 module.exports = {
@@ -23,51 +20,44 @@ module.exports = {
     });
   },
 
-  //membuat recomendation
-  createRecomendationBlog : async (req,res) => {
+  // Membuat rekomendasi blog
+  createRecomendationBlog : async (req, res) => {
     try {
+      // Membuat skema untuk validasi
+      const schema = {
+        BlogId: { type: "number", integer: true },
+        status: { type: "number", integer: true }
+      };
 
-        //membuat schema untuk validasi
-        const schema = {
-            BlogId: {
-                type: "integer",
-            },
-            status: {
-                type: "integer",
-            }
-        }
+      // Membuat objek rekomendasi blog
+      let recomendationblogCreateObj = {
+        BlogId: req.body.BlogId,
+        status: req.body.status
+      };
 
-        //buat object kategoriblog
-        let recomendationblogCreateObj = {
-            BlogId: req.body.BlogId,
-            status: req.body.status
-        }
+      // Validasi menggunakan module fastest-validator
+      const validate = v.validate(recomendationblogCreateObj, schema);
+      if (validate.length > 0) {
+        res.status(400).json(response(400, 'validation failed', validate));
+        return;
+      }
 
-        //validasi menggunakan module fastest-validator
-        const validate = v.validate(recomendationblogCreateObj, schema);
-        if (validate.length > 0) {
-            res.status(400).json(response(400, 'validation failed', validate));
-            return;
-        }
+      // Buat rekomendasi blog
+      let recomendationblogCreate = await RecomendationBlog.create(recomendationblogCreateObj);
 
-        //buat kategoriblog
-        let recomendationblogCreate = await RecomendationBlog.create(recomendationblogCreateObj);
-
-        //response menggunakan helper response.formatter
-        res.status(201).json(response(201, 'success create recomendation blog', recomendationblogCreate));
-    }catch (err) {
-        res.status(500).json(response(500,'internal server error', err));
-        console.log(err);
+      // Response menggunakan helper response.formatter
+      res.status(201).json(response(201, 'success create recomendation blog', recomendationblogCreate));
+    } catch (err) {
+      res.status(500).json(response(500,'internal server error', err));
+      console.log(err);
     }
   },
 
   getBlogRecomendationId: async (req, res) => {
     try {
-      // mendapatkan semua data blog berdasarkan slug
+      // Mendapatkan semua data blog berdasarkan slug
       let recommendations = await RecomendationBlog.findAll({
-        where: {
-          id: req.params.id,
-        },
+        where: { id: req.params.id },
         include: [
           {
             model: Blog,
@@ -77,10 +67,10 @@ module.exports = {
         ]
       });
 
-        res.status(200).json({
-          success: true,
-          data: recommendations
-        });
+      res.status(200).json({
+        success: true,
+        data: recommendations
+      });
     } catch (err) {
       res.status(500).json(response(500, "internal server error", err));
       console.log(err);
