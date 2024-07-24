@@ -237,9 +237,9 @@ class AboutCompanyController {
         siteTitle,
         siteDescription,
         footerDescription,
-        siteLogo: req.files && req.files.siteLogo ? siteLogoKey : undefined,
-        footerLogo: req.files && req.files.footerLogo ? footerLogoKey : undefined,
-        favicon: req.files && req.files.favicon ? faviconKey : undefined,
+        siteLogo: req.files && req.files.siteLogo ? siteLogoKey : company.siteLogo,
+        footerLogo: req.files && req.files.footerLogo ? footerLogoKey : company.footerLogo,
+        favicon: req.files && req.files.favicon ? faviconKey : company.favicon,
       });
 
       res.status(200).json({
