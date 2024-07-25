@@ -118,11 +118,11 @@ module.exports = {
           excerpt: blog.excerpt,
           body: blog.body,
           altImage: blog.altImage,
-          kategoriblog_id: blog.Kategoriblog?.id, // Menggunakan operator ?. untuk memeriksa keberadaan Kategoriblog
+          kategoriblog_id: blog.Kategoriblog?.id,
           kategoriblog_title: blog.Kategoriblog?.title,
-          tagblog_id: blog.Tagblog?.id, // Menggunakan operator ?. untuk memeriksa keberadaan Tagblog
+          tagblog_id: blog.Tagblog?.id,
           tagblog_title: blog.Tagblog?.title,
-          user_id: blog.User?.id, // Menggunakan operator ?. untuk memeriksa keberadaan User
+          user_id: blog.User?.id,
           user_title: blog.User?.name,
           image: blog.image,
           status: blog.status,
