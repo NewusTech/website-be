@@ -40,10 +40,10 @@ class SeoController {
 
   static async newSeo(req, res, next) {
     try {
-      const { googleManager, googleTagManager, searchConsole, googleAnalytics } = req.body;
+      const { tagManager, googleTagManager, searchConsole, googleAnalytics } = req.body;
 
       const dataCreate = {
-        googleManager: googleManager,
+        tagManager: tagManager,
         googleTagManager: googleTagManager,
         searchConsole: searchConsole,
         googleAnalytics: googleAnalytics,
@@ -80,13 +80,13 @@ class SeoController {
   static async updateSeo(req, res, next) {
     try {
       const { id } = req.params;
-      const { googleManager, googleTagManager, searchConsole, googleAnalytics } = req.body;
+      const { tagManager, googleTagManager, searchConsole, googleAnalytics } = req.body;
 
       const seo = await Seo.findByPk(id);
       if (!seo) throw { name: "InvalidId" };
 
       await seo.update({
-        googleManager: googleManager,
+        tagManager: tagManager,
         googleTagManager: googleTagManager,
         searchConsole: searchConsole,
         googleAnalytics: googleAnalytics,
