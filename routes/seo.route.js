@@ -10,12 +10,12 @@ const {
 const router = require("express").Router();
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const mid = require('../middlewares/auth.middleware');
 
 router.get("/admin/seo/lists", seoLists);
 router.post("/admin/seo/new-seo", newSeo);
 router.get("/admin/:id/seo/detail", seoDetails);
 router.delete("/admin/:id/seo/delete", deleteSeo);
-router.put("/admin/:id/seo/update", updateSeo);
+router.put("/admin/:id/seo/update", [mid.isLogin, mid.isLogout], updateSeo);
 
 module.exports = router;
