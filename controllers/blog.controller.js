@@ -103,7 +103,7 @@ module.exports = {
           {
             model: User,
             attributes: ["name", "id"],
-            as: "User",
+            as: "user",
           },
         ],
         attributes: { exclude: ["kategoriblog_id", "tagblog_id", "user_id"] },
