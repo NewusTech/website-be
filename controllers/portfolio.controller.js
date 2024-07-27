@@ -269,25 +269,30 @@ class PortfolioController {
   // method for deleting portfolio
   static async deletePortfolio(req, res, next) {
     try {
-      // getting params to check portfolio from db
-      const { id } = req.params;
+      let portfolio = await Portfolio.findOne({
+          where:{
+              id : req.params.id
+          }
+      })
 
-      // method to check if portfolio exist
-      const portfolio = await Portfolio.findByPk(id);
+      //cek apakah data kategoriportfolio ada
+      if(!portfolio){
+          res.status(404).json(response(404,'portfolio not found'));
+          return;
+      }
 
-      // validate if portfolio doesn't exist
-      if (!portfolio) throw { name: "InvalidId" };
+      await Portfolio.destroy({
+          where:{
+              id: req.params.id,
+          }
+      })
+      //response menggunakan helper response.formatter
+      res.status(200).json(response(200,'success delete portfolio'));
 
-      // method to delete portfolio
-      await portfolio.destroy();
-
-      res.status(200).json({
-        message: `${portfolio.title} successfully deleted portfolio`,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
+  } catch (err) {
+      res.status(500).json(response(500,'internal server error', err));
+      console.log(err);
+  }
   }
 
   static async updatePortfolio(req, res, next) {
