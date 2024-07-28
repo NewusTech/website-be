@@ -342,14 +342,21 @@ module.exports = {
           res.status(404).json(response(404,'kategoriblog not found'));
           return;
       }
+      
+      await RecomendationBlog.destroy({
+        where: {
+          BlogId: req.params.id
+        }
+      });
 
       await Blog.destroy({
           where:{
               id: req.params.id,
           }
-      })
+      });
+      
       //response menggunakan helper response.formatter
-      res.status(200).json(response(200,'success delete blogch'));
+      res.status(200).json(response(200,'success delete blog'));
 
   } catch (err) {
       res.status(500).json(response(500,'internal server error', err));
