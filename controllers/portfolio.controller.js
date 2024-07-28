@@ -270,10 +270,14 @@ class PortfolioController {
   static async deletePortfolio(req, res, next) {
     try {
       let portfolio = await Portfolio.findOne({
-          where:{
-              id : req.params.id
-          }
-      })
+        where: {
+          id: req.params.id
+        },
+        include: [{
+          model: Galeri,
+          as: 'galeri'
+        }]
+      });
 
       //cek apakah data kategoriportfolio ada
       if(!portfolio){
@@ -281,11 +285,19 @@ class PortfolioController {
           return;
       }
 
+      await Galeri.destroy({
+        where: {
+          PortofolioId: req.params.id
+        }
+      });
+
       await Portfolio.destroy({
           where:{
               id: req.params.id,
           }
       })
+
+      
       //response menggunakan helper response.formatter
       res.status(200).json(response(200,'success delete portfolio'));
 
