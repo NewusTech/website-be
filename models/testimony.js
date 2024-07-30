@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Testimony.init({
     name: DataTypes.STRING,
+    title: DataTypes.STRING,
     companyName: DataTypes.STRING,
     testimony: DataTypes.STRING,
     image: DataTypes.STRING,

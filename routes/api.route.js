@@ -35,6 +35,7 @@ const seo = require('./seo.route');
 
 const recomendationblog = require('./recomendationBlog.route');
 const legalitas = require('./legalitas.route');
+const seoPages = require('./seoPages.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -73,4 +74,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, recomendationblog);
 
     app.use(urlApi, legalitas);
+    app.use(urlApi, seoPages);
 }

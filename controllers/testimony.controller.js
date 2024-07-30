@@ -47,7 +47,7 @@ class TestimonyController {
 
   static async newTestimony(req, res, next) {
     try {
-      const { name, companyName, testimony, rating } = req.body;
+      const { name, title, companyName, testimony, rating } = req.body;
 
       let imageKey;
 
@@ -72,6 +72,7 @@ class TestimonyController {
 
       const dataCreate = {
         name: name,
+        title: title,
         companyName: companyName,
         testimony:testimony,
         rating: rating,
@@ -109,7 +110,7 @@ class TestimonyController {
   static async updateTestimony(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, companyName,testimony, rating } = req.body;
+      const { name, title, companyName,testimony, rating } = req.body;
   
       const testi = await Testimony.findByPk(id);
   
@@ -138,6 +139,7 @@ class TestimonyController {
   
       const dataUpdate = {
         name: name,
+        title: title,
         companyName: companyName,
         testimony: testimony,
         rating: rating,
