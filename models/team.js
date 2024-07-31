@@ -82,6 +82,13 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      institute: DataTypes.STRING,
+      major: DataTypes.STRING,
+      joinDate: DataTypes.STRING,
+      address: DataTypes.STRING,
+      birthdayDate: DataTypes.STRING,
+      email: DataTypes.STRING,
+      linkedin: DataTypes.STRING,
       achievement: {
         type: DataTypes.STRING,
         allowNull: false,

@@ -259,7 +259,7 @@ class TeamController {
   
   static async newTeam(req, res, next) {
     try {
-      const { name, title, description, DivitionCategoryId } = req.body;
+      const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
   
       let imageKey, achievementKey;
@@ -341,6 +341,13 @@ class TeamController {
           name,
           title,
           description,
+          institute,
+          major,
+          joinDate,
+          address,
+          birthdayDate,
+          email,
+          linkedin,
           DivitionCategoryId: divitionCategoryIdInt,
           image: imageKey || null,
           achievement: achievementKey || null,
