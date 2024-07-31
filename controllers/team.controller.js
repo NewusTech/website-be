@@ -422,7 +422,7 @@ class TeamController {
       const { id } = req.params;
       let imageKey;
       let achievementKey;
-      const { name, title, description, DivitionCategoryId } = req.body;
+      const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
 
       const team = await Team.findByPk(id);
@@ -472,6 +472,13 @@ class TeamController {
         name,
         title,
         description,
+        institute,
+        major,
+        joinDate,
+        address,
+        birthdayDate,
+        email,
+        linkedin,
         image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
         achievement: req.files && req.files.achievement ? achievementKey : undefined,
         DivitionCategoryId: divitionCategoryIdInt,
