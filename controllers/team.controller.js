@@ -1,4 +1,4 @@
-const { Team, DivitionCategory } = require("../models/index");
+const { Team, DivitionCategory, TeamSertifikat, TeamProject } = require("../models/index");
 
 const { response } = require('../helpers/response.formatter');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -19,6 +19,16 @@ class TeamController {
           {
             model: DivitionCategory,
             attributes: ["title", "createdAt"],
+          },
+          {
+            model: TeamSertifikat,
+            as: 'teamsertifikat',
+            attributes: ["title", "publisher", "startDate", "finishDate", "credentialID", "credentialURL", "media"],
+          },
+          {
+            model: TeamProject,
+            as: 'teamproject',
+            attributes: ["projectName", "description", "startDate", "finishDate", "url", "media"],
           },
         ],
       });
@@ -43,6 +53,16 @@ class TeamController {
             model: DivitionCategory,
             attributes: ["title", "createdAt"],
           },
+          {
+            model: TeamSertifikat,
+            as: 'teamsertifikat',
+            attributes: ["title", "publisher", "startDate", "finishDate", "credentialID", "credentialURL", "media"],
+          },
+          {
+            model: TeamProject,
+            as: 'teamproject',
+            attributes: ["projectName", "description", "startDate", "finishDate", "url", "media"],
+          },
         ],
       });
 
@@ -57,72 +77,320 @@ class TeamController {
       next(error);
     }
   }
+  // static async newTeam(req, res, next) {
+  //   try {
+  //     const { name, title, description, DivitionCategoryId } = req.body;
+  //     const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
+  
+  //     let imageKey;
+  //     let achievementKey;
+  
+  //     // Handle image upload
+  //     if (req.files && req.files.image) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+  
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/team/${uniqueFileName}`,
+  //         Body: req.files.image[0].buffer,
+  //         ACL: 'public-read',
+  //         ContentType: req.files.image[0].mimetype
+  //       };
+  
+  //       const command = new PutObjectCommand(uploadParams);
+  
+  //       await s3Client.send(command);
+  
+  //       imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+  
+  //     // Handle achievement upload
+  //     if (req.files && req.files.achievement) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
+  
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/team/achievements/${uniqueFileName}`,
+  //         Body: req.files.achievement[0].buffer,
+  //         ACL: 'public-read',
+  //         ContentType: req.files.achievement[0].mimetype
+  //       };
+  
+  //       const command = new PutObjectCommand(uploadParams);
+  
+  //       await s3Client.send(command);
+  
+  //       achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+  
+  //     const dataCreate = {
+  //       name: name,
+  //       title: title,
+  //       description: description,
+  //       DivitionCategoryId: divitionCategoryIdInt,
+  //       image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
+  //       achievement: req.files && req.files.achievement ? achievementKey : undefined
+  //     }
+  
+  //     const createTeams = await Team.create(dataCreate);
+
+      
+  
+  //     res.status(201).json(response(201, 'success create team', createTeams));
+  //   } catch (err) {
+  //     res.status(500).json(response(500, 'internal server error', err));
+  //     console.log(err);
+  //   }
+  // }
+
+  // Bisa nih
+  // static async newTeam(req, res, next) {
+  //   try {
+  //     const { name, title, description, DivitionCategoryId } = req.body;
+  //     const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
+      
+  //     let certificates = [];
+  //     if (req.body.certificates) {
+  //       try {
+  //         certificates = JSON.parse(req.body.certificates);
+  //       } catch (jsonError) {
+  //         return res.status(400).json({ status: 400, message: 'Invalid JSON format for certificates', error: jsonError.message });
+  //       }
+  //     }
+  
+  //     let imageKey, achievementKey;
+  
+  //     // Handle image upload
+  //     if (req.files && req.files.image) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+    
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/team/${uniqueFileName}`,
+  //         Body: req.files.image[0].buffer,
+  //         ACL: 'public-read',
+  //         ContentType: req.files.image[0].mimetype
+  //       };
+    
+  //       const command = new PutObjectCommand(uploadParams);
+    
+  //       await s3Client.send(command);
+    
+  //       imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+    
+  //     // Handle achievement upload
+  //     if (req.files && req.files.achievement) {
+  //       const timestamp = new Date().getTime();
+  //       const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
+    
+  //       const uploadParams = {
+  //         Bucket: process.env.AWS_BUCKET,
+  //         Key: `webnewus/team/achievements/${uniqueFileName}`,
+  //         Body: req.files.achievement[0].buffer,
+  //         ACL: 'public-read',
+  //         ContentType: req.files.achievement[0].mimetype
+  //       };
+    
+  //       const command = new PutObjectCommand(uploadParams);
+    
+  //       await s3Client.send(command);
+    
+  //       achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //     }
+    
+  //     const dataCreate = {
+  //       name: name,
+  //       title: title,
+  //       description: description,
+  //       DivitionCategoryId: divitionCategoryIdInt,
+  //       image: imageKey,
+  //       achievement: achievementKey
+  //     };
+    
+  //     const createTeams = await Team.create(dataCreate);
+    
+  //     if (certificates.length > 0) {
+  //       for (let i = 0; i < certificates.length; i++) {
+  //         const cert = certificates[i];
+  //         let mediaKey;
+    
+  //         if (req.files[`certificates[${i}][media]`]) {
+  //           const timestamp = new Date().getTime();
+  //           const uniqueFileName = `${timestamp}-${req.files[`certificates[${i}][media]`][0].originalname}`;
+    
+  //           const uploadParams = {
+  //             Bucket: process.env.AWS_BUCKET,
+  //             Key: `webnewus/team/certificates/${uniqueFileName}`,
+  //             Body: req.files[`certificates[${i}][media]`][0].buffer,
+  //             ACL: 'public-read',
+  //             ContentType: req.files[`certificates[${i}][media]`][0].mimetype
+  //           };
+    
+  //           const command = new PutObjectCommand(uploadParams);
+    
+  //           await s3Client.send(command);
+    
+  //           mediaKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+  //         }
+    
+  //         await TeamSertifikat.create({
+  //           TeamId: createTeams.id,
+  //           title: cert.title,
+  //           publisher: cert.publisher,
+  //           startDate: cert.startDate,
+  //           finishDate: cert.finishDate,
+  //           credentialID: cert.credentialID,
+  //           credentialURL: cert.credentialURL,
+  //           media: mediaKey
+  //         });
+  //       }
+  //     }
+    
+  //     res.status(201).json({ status: 201, message: 'success create team', data: createTeams });
+  //   } catch (err) {
+  //     res.status(500).json({ status: 500, message: 'internal server error', error: err });
+  //     console.error(err);
+  //   }
+  // }
+  
   static async newTeam(req, res, next) {
     try {
       const { name, title, description, DivitionCategoryId } = req.body;
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
   
-      let imageKey;
-      let achievementKey;
+      let imageKey, achievementKey;
+      let certificateImageFiles = [];
+      let certificates = JSON.parse(req.body.certificates || '[]');
+      let projectImageFiles = [];
+      let projects = JSON.parse(req.body.projects || '[]');
   
-      // Handle image upload
-      if (req.files && req.files.image) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+      if (req.files) {
+        // upload file
+        for (let file of req.files) {
+          const fieldname = file.fieldname;
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${file.originalname}`;
   
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/team/${uniqueFileName}`,
-          Body: req.files.image[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.image[0].mimetype
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/team/${uniqueFileName}`,
+            Body: file.buffer,
+            ACL: 'public-read',
+            ContentType: file.mimetype,
+          };
+  
+          if (fieldname === 'image') {
+            const command = new PutObjectCommand(uploadParams);
+            await s3Client.send(command);
+            imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+          } else if (fieldname === 'achievement') {
+            const command = new PutObjectCommand(uploadParams);
+            await s3Client.send(command);
+            achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+          } else if (fieldname.startsWith('certificatesImages')) {
+            certificateImageFiles.push(file);
+          } else if (fieldname.startsWith('projectImages')) {
+            projectImageFiles.push(file);
+          }
+        }
+  
+        // Handle certificatesImages upload
+        const certificateImageKeys = await Promise.all(certificateImageFiles.map(async (file) => {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${file.originalname}`;
+  
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/team/certificates/${uniqueFileName}`,
+            Body: file.buffer,
+            ACL: 'public-read',
+            ContentType: file.mimetype,
+          };
+  
+          const command = new PutObjectCommand(uploadParams);
+          await s3Client.send(command);
+  
+          return `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }));
+  
+        // Handle projectImage upload
+        const projectImageKeys = await Promise.all(projectImageFiles.map(async (file) => {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${file.originalname}`;
+  
+          const uploadParams = {
+            Bucket: process.env.AWS_BUCKET,
+            Key: `webnewus/team/project/${uniqueFileName}`,
+            Body: file.buffer,
+            ACL: 'public-read',
+            ContentType: file.mimetype,
+          };
+  
+          const command = new PutObjectCommand(uploadParams);
+          await s3Client.send(command);
+  
+          return `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }));
+  
+        // Simpan data ke database
+        const newTeamData = {
+          name,
+          title,
+          description,
+          DivitionCategoryId: divitionCategoryIdInt,
+          image: imageKey || null,
+          achievement: achievementKey || null,
         };
   
-        const command = new PutObjectCommand(uploadParams);
+        const newTeam = await Team.create(newTeamData);
   
-        await s3Client.send(command);
+        for (let i = 0; i < certificates.length; i++) {
+          const certData = certificates[i];
+          const media = certificateImageKeys[i] || null;
+          await TeamSertifikat.create({
+            TeamId: newTeam.id,
+            title: certData.title,
+            publisher: certData.publisher,
+            startDate: certData.startDate,
+            finishDate: certData.finishDate,
+            credentialID: certData.credentialID,
+            credentialURL: certData.credentialURL,
+            media,
+          });
+        }
   
-        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        for (let i = 0; i < projects.length; i++) {
+          const projectData = projects[i];
+          const media = projectImageKeys[i] || null;
+          if (!media) {
+            throw new Error(`Media for project ${projectData.projectName} cannot be null`);
+          }
+          await TeamProject.create({
+            TeamId: newTeam.id,
+            projectName: projectData.projectName,
+            description: projectData.description,
+            startDate: projectData.startDate,
+            finishDate: projectData.finishDate,
+            url: projectData.url,
+            media,
+          });
+        }
+  
+        res.status(201).json({ status: 201, message: 'Team created successfully', data: newTeam });
+      } else {
+        res.status(400).json({ status: 400, message: 'No files were uploaded' });
       }
-  
-      // Handle achievement upload
-      if (req.files && req.files.achievement) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
-  
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/team/achievements/${uniqueFileName}`,
-          Body: req.files.achievement[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.achievement[0].mimetype
-        };
-  
-        const command = new PutObjectCommand(uploadParams);
-  
-        await s3Client.send(command);
-  
-        achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
-  
-      const dataCreate = {
-        name: name,
-        title: title,
-        description: description,
-        DivitionCategoryId: divitionCategoryIdInt,
-        image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
-        achievement: req.files && req.files.achievement ? achievementKey : undefined
-      }
-  
-      const createTeams = await Team.create(dataCreate);
-  
-      res.status(201).json(response(201, 'success create team', createTeams));
-    } catch (err) {
-      res.status(500).json(response(500, 'internal server error', err));
-      console.log(err);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
   }
   
+
   static async deleteTeam(req, res, next) {
     try {
       const { id } = req.params;

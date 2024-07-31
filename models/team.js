@@ -10,6 +10,14 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Team.belongsTo(models.DivitionCategory);
+      Team.hasMany(models.TeamSertifikat, {
+        foreignKey: 'TeamId',
+        as: 'teamsertifikat'
+      });
+      Team.hasMany(models.TeamProject, {
+        foreignKey: 'TeamId',
+        as: 'teamproject'
+      });
     }
   }
   Team.init(
