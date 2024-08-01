@@ -30,11 +30,6 @@ class TeamController {
             as: 'teamproject',
             attributes: ["projectName", "description", "startDate", "finishDate", "url", "media"],
           },
-          {
-            model: TeamSkill,
-            as: 'teamskill',
-            attributes: ["title", "media"],
-          },
         ],
       });
 
@@ -67,11 +62,6 @@ class TeamController {
             model: TeamProject,
             as: 'teamproject',
             attributes: ["projectName", "description", "startDate", "finishDate", "url", "media"],
-          },
-          {
-            model: TeamSkill,
-            as: 'teamskill',
-            attributes: ["title", "media"],
           },
         ],
       });
