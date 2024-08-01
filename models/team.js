@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'TeamId',
         as: 'teamproject'
       });
+      Team.hasMany(models.TeamSkill, {
+        foreignKey: 'TeamId',
+        as: 'teamskill'
+      });
     }
   }
   Team.init(
