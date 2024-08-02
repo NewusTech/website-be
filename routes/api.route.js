@@ -38,6 +38,8 @@ const legalitas = require('./legalitas.route');
 const seoPages = require('./seoPages.route');
 const termCondition = require('./termCondition.route');
 
+const privacyPolicy = require('./privacyPolicy.route');
+
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
 
@@ -77,4 +79,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, legalitas);
     app.use(urlApi, seoPages);
     app.use(urlApi, termCondition);
+    app.use(urlApi, privacyPolicy);
 }
