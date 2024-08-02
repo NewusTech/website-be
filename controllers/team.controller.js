@@ -240,8 +240,7 @@ class TeamController {
           email,
           linkedin,
           DivitionCategoryId: divitionCategoryIdInt,
-          image: imageKey || null,
-          achievement: achievementKey || null,
+          image: imageKey || null
         };
   
         const newTeam = await Team.create(newTeamData);
