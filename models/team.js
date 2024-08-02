@@ -94,18 +94,18 @@ module.exports = (sequelize, DataTypes) => {
       birthdayDate: DataTypes.STRING,
       email: DataTypes.STRING,
       linkedin: DataTypes.STRING,
-      achievement: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "Achievement can not be empty",
-          },
-          notNull: {
-            msg: "Achievement can not be empty",
-          },
-        },
-      },
+      // achievement: {
+      //   type: DataTypes.STRING,
+      //   allowNull: false,
+      //   validate: {
+      //     notEmpty: {
+      //       msg: "Achievement can not be empty",
+      //     },
+      //     notNull: {
+      //       msg: "Achievement can not be empty",
+      //     },
+      //   },
+      // },
     },
     {
       sequelize,

@@ -17,6 +17,6 @@ router.post('/admin/team/new-team', upload.any(), newTeam);
 router.get("/admin/:id/team/detail", teamDetails);
 router.get("/admin/team/:slug", getTeamBySlug);
 router.delete("/admin/:id/team/delete", deleteTeam);
-router.put("/admin/:id/team/update", upload.fields([{ name: 'image', maxCount: 1 }, { name: 'achievement', maxCount: 1 }]), updateTeam);
+router.put("/admin/:id/team/update", upload.fields([{ name: 'image', maxCount: 1 }]), updateTeam);
 
 module.exports = router;

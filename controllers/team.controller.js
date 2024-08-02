@@ -134,7 +134,7 @@ class TeamController {
       const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
   
-      let imageKey, achievementKey;
+      let imageKey;
       let certificateImageFiles = [];
       let certificates = JSON.parse(req.body.certificates || '[]');
       let projectImageFiles = [];
@@ -161,10 +161,6 @@ class TeamController {
             const command = new PutObjectCommand(uploadParams);
             await s3Client.send(command);
             imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-          } else if (fieldname === 'achievement') {
-            const command = new PutObjectCommand(uploadParams);
-            await s3Client.send(command);
-            achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
           } else if (fieldname.startsWith('certificatesImages')) {
             certificateImageFiles.push(file);
           } else if (fieldname.startsWith('projectImages')) {
@@ -328,7 +324,6 @@ class TeamController {
     try {
       const { id } = req.params;
       let imageKey;
-      let achievementKey;
       const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
       const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
 
@@ -336,16 +331,19 @@ class TeamController {
 
       if (!team) throw { name: "InvalidId" };
 
-      if (req.file) {
+      // Log untuk memeriksa file yang diterima
+      console.log('Files:', req.files);
+
+      if (req.files && req.files.image) {
         const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+        const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
 
         const uploadParams = {
           Bucket: process.env.AWS_BUCKET,
           Key: `webnewus/team/${uniqueFileName}`,
-          Body: req.file.buffer,
+          Body: req.files.image[0].buffer,
           ACL: 'public-read',
-          ContentType: req.file.mimetype
+          ContentType: req.files.image[0].mimetype
         };
 
         const command = new PutObjectCommand(uploadParams);
@@ -353,26 +351,6 @@ class TeamController {
         await s3Client.send(command);
 
         imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
-
-      // Handle achievement upload
-      if (req.files && req.files.achievement) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.files.achievement[0].originalname}`;
-  
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/team/achievements/${uniqueFileName}`,
-          Body: req.files.achievement[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.achievement[0].mimetype
-        };
-  
-        const command = new PutObjectCommand(uploadParams);
-  
-        await s3Client.send(command);
-  
-        achievementKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
 
       await team.update({
@@ -386,8 +364,7 @@ class TeamController {
         birthdayDate,
         email,
         linkedin,
-        image: imageKey, // Tetapkan nilai imageKey, bahkan jika undefined
-        achievement: req.files && req.files.achievement ? achievementKey : undefined,
+        image: imageKey || team.image, // Tetapkan nilai imageKey atau tetap nilai lama jika undefined
         DivitionCategoryId: divitionCategoryIdInt,
       });
 
@@ -400,6 +377,7 @@ class TeamController {
       next(error);
     }
   }
+
 }
 
 module.exports = TeamController;
