@@ -322,61 +322,75 @@ class TeamController {
 
   static async updateTeam(req, res, next) {
     try {
-      const { id } = req.params;
-      let imageKey;
-      const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
-      const divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
+        const { id } = req.params;
+        let imageKey;
+        const { name, title, description, DivitionCategoryId, institute, major, joinDate, address, birthdayDate, email, linkedin } = req.body;
 
-      const team = await Team.findByPk(id);
+        // Validasi dan konversi DivitionCategoryId jika ada
+        let divitionCategoryIdInt;
+        if (DivitionCategoryId) {
+            divitionCategoryIdInt = parseInt(DivitionCategoryId, 10);
+            if (isNaN(divitionCategoryIdInt)) {
+                return res.status(400).json({ message: 'Invalid DivitionCategoryId' });
+            }
 
-      if (!team) throw { name: "InvalidId" };
+            // Validasi ID kategori divisi jika ada
+            const validCategory = await DivitionCategory.findByPk(divitionCategoryIdInt);
+            if (!validCategory) throw { name: "InvalidCategoryId" };
+        }
 
-      // Log untuk memeriksa file yang diterima
-      console.log('Files:', req.files);
+        const team = await Team.findByPk(id);
+        if (!team) throw { name: "InvalidId" };
 
-      if (req.files && req.files.image) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
+        // Log untuk memeriksa file yang diterima
+        console.log('Files:', req.files);
 
-        const uploadParams = {
-          Bucket: process.env.AWS_BUCKET,
-          Key: `webnewus/team/${uniqueFileName}`,
-          Body: req.files.image[0].buffer,
-          ACL: 'public-read',
-          ContentType: req.files.image[0].mimetype
-        };
+        if (req.files && req.files.image) {
+            const timestamp = new Date().getTime();
+            const uniqueFileName = `${timestamp}-${req.files.image[0].originalname}`;
 
-        const command = new PutObjectCommand(uploadParams);
+            const uploadParams = {
+                Bucket: process.env.AWS_BUCKET,
+                Key: `webnewus/team/${uniqueFileName}`,
+                Body: req.files.image[0].buffer,
+                ACL: 'public-read',
+                ContentType: req.files.image[0].mimetype
+            };
 
-        await s3Client.send(command);
+            const command = new PutObjectCommand(uploadParams);
 
-        imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
+            await s3Client.send(command);
 
-      await team.update({
-        name,
-        title,
-        description,
-        institute,
-        major,
-        joinDate,
-        address,
-        birthdayDate,
-        email,
-        linkedin,
-        image: imageKey || team.image, // Tetapkan nilai imageKey atau tetap nilai lama jika undefined
-        DivitionCategoryId: divitionCategoryIdInt,
-      });
+            imageKey = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_DEFAULT_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
 
-      res.status(200).json({
-        message: "Success update team",
-        data: team,
-      });
+        await team.update({
+            name,
+            title,
+            description,
+            institute,
+            major,
+            joinDate,
+            address,
+            birthdayDate,
+            email,
+            linkedin,
+            image: imageKey || team.image, // Tetapkan nilai imageKey atau tetap nilai lama jika undefined
+            ...(divitionCategoryIdInt && { DivitionCategoryId: divitionCategoryIdInt }), // Update hanya jika ada nilai valid
+        });
+
+        res.status(200).json({
+            message: "Success update team",
+            data: team,
+        });
     } catch (error) {
-      console.log(error);
-      next(error);
+        console.log(error);
+        next(error);
     }
-  }
+}
+
+
+
 
 }
 
