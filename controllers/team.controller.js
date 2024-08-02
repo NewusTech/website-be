@@ -87,6 +87,47 @@ class TeamController {
       next(error);
     }
   }
+
+  static async getTeamBySlug (req, res, next) {
+    try {
+      const team = await Team.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+        include: [
+          {
+            model: DivitionCategory,
+            attributes: ["title", "createdAt"],
+          },
+          {
+            model: TeamSertifikat,
+            as: 'teamsertifikat',
+            attributes: ["title", "publisher", "startDate", "finishDate", "credentialID", "credentialURL", "media"],
+          },
+          {
+            model: TeamProject,
+            as: 'teamproject',
+            attributes: ["projectName", "description", "startDate", "finishDate", "url", "media"],
+          },
+          {
+            model: TeamSkill,
+            as: 'teamskill',
+            attributes: ["title", "media"],
+          },
+        ],
+      });
+
+      if (!team) throw { name: "InvalidSlug" };
+
+      res.status(200).json({
+        message: "Success get team detail",
+        data: team,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
   
   static async newTeam(req, res, next) {
     try {
@@ -263,7 +304,6 @@ class TeamController {
       res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
   }
-  
 
   static async deleteTeam(req, res, next) {
     try {
