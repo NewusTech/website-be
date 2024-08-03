@@ -6,7 +6,7 @@ const { Readable } = require('stream');
 const error = require('./errorHandler/errorHandler');
 
 const app = express();
-const port = 3001;
+const port = 3010;
 const urlApi = "/api";
 
 app.use(cors());
