@@ -39,6 +39,7 @@ const seoPages = require('./seoPages.route');
 const termCondition = require('./termCondition.route');
 
 const privacyPolicy = require('./privacyPolicy.route');
+const banner = require('./banner.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -80,4 +81,6 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, seoPages);
     app.use(urlApi, termCondition);
     app.use(urlApi, privacyPolicy);
+
+    app.use(urlApi, banner);
 }
